@@ -3,35 +3,38 @@ clear; clc; close all;
 L = 1200; % Length of bridge
 n = 1200; % Discretize into 1 mm seg.
 dL = L/n; % Length of each segment
-P = 446.666666; % Total weight of train [N]
+P = 400; % Total weight of train [N]
 x = linspace(0, L, n+1); % x-axis
 
 %% 1. SFD, BMD under train loading
 x_train = [52 228 392 568 732 908]; % Train Load Locations (the 6 wheels)
-P_factors = [1.35 1.35 1 1 1 1]; % Load Factors (the 6 wheels)
+l_train = 960; % Train Length
+P_factors = [1 1 1 1 1 1]; % Load Factors (the 6 wheels)
 P_train = P_factors .* P/sum(P_factors) * -1; % load of each wheel
-n_train = 3; % num of train locations
-SFDi = zeros(n+1); % 1 SFD for each train loc.
-BMDi = zeros(n+1); % 1 BMD for each train loc.
+
+% set up the SFD and BMD arrays of the bridge for every discretized location of the train
+% the rows are the locations of the train, with the first row being the train completely off of the bridge on the left and the last row being the train completely off of the bridge on the right
+% the columns are the forces/moments at each cut, with the first column being the left end of the bridge and the last column being the right end of the bridge
+SFDi = zeros(n + 1 + l_train, n + 1); % SFDs of the bridge
+BMDi = zeros(n + 1 + l_train, n + 1); % BMDs of the bridge
 %% 1.1 Solve for SFD and BMD with the train at different locations
 
+% shift the train entirely off of the bridge to the left
+x_train = x_train - L;
+
 % for every discretized location of the train, find the SFD and BMD
-for i = 1:n+1
+for i = 1:n+1+l_train
     R1 = 0; % Reaction 1
     R2 = 0; % Reaction 2
     
     % find the loads that are on the bridge
-    x_train_on_bridge = x_train(x_train <= x(end));
-    P_train_on_bridge = P_train(x_train <= x(end));
+    x_train_on_bridge = x_train(x_train >= 0 & x_train <= L);
+    P_train_on_bridge = P_train(x_train >= 0 & x_train <= L);
 
     % if there are loads on the bridge, solve for the reactions
     if ~isempty(x_train_on_bridge)
         % solve for the reactions
         [R1, R2] = reaction(P_train_on_bridge, x_train_on_bridge);
-    else
-        % if there are no loads on the bridge, the reactions are 0
-        R1 = 0;
-        R2 = 0;
     end
 
     % solve for the shear force and bending moment at each location
@@ -72,18 +75,6 @@ end
 SFD = max(abs(SFDi)); % SFD envelope
 BMD = max(BMDi); % BMD envelope
 
-% plot the SFD and BMD of the train centered on the bridge
-figure
-plot(x, SFDi(121,:), 'r')
-xlabel('Distance along bridge (mm)')
-ylabel('Shear Force (N)')
-title('SFD of Train Centered on Bridge')
-figure
-plot(x, BMDi(121,:), 'r')
-xlabel('Distance along bridge (mm)')
-ylabel('Bending Moment (N*mm)')
-title('BMD of Train Centered on Bridge')
-
 %% 2. Define Cross Section
 % x_sections is stored as a dictionary with the keys being the x location along the bridge and the values being the cross section at that location
 % each cross section is stored as an array of subsections with the following values:
@@ -103,17 +94,68 @@ x_sections = {[10, 0, 80, 1.27;
                90-5-1.27, 75-1.27, 5+1.27, 1.27; 
                0, 75, 100, 1.27]}; % cross sections of the bridge
 
-% DEBUG draw the first cross section
-figure
-hold on; grid on; grid minor;
-axis equal
-axis([0, 100, 0, 100])
-for i = 1:size(x_sections{1},1)
-    rectangle('Position', x_sections{1}(i,:), 'FaceColor', 'b')
+% The locations of the glue are stored as a dictionary with the keys being the x location along the bridge and the values being the locations of the glue
+% each glue location is stored as an array of subsections with the following values:
+% [dir, x, y, length/width; ...]
+% dir is the direction of the glue with 0 being horizontal and 1 being vertical
+% x is the x location of the reference point of the glue
+% y is the y location of the reference point of the glue
+% length/width is the length or width of the glue
+% the reference point is the bottom left corner of the glue
+% the glues are constructed from the bottom up with 0, 0 being the bottom left corner of the bridge 
+glue_locations = {[0, 10, 75, 1.27 + 5;
+                   0, 10 + 80 - 5 - 1.27, 75, 1.27 + 5]};
+
+x_section_params = dictionary(x_change, x_sections); % dictionary of the cross sections
+glue_params = dictionary(x_change, glue_locations); % dictionary of the glue locations
+
+% DEBUG
+% plot the cross sections on separate figures
+% glue is red
+% cross section is blue
+for i = 1:length(x_change)
+    % find the cross section
+    x_section = x_section_params(x_change(i));
+    x_section = x_section{1, 1};
+
+    % find the glue locations
+    glue = glue_params(x_change(i));
+    glue = glue{1, 1};
+
+    % plot the cross section
+    figure
+    hold on
+    for j = 1:size(x_section,1)
+        rectangle('Position', [x_section(j,1), x_section(j,2), x_section(j,3), x_section(j,4)], 'FaceColor', 'y')
+    end
+
+    % plot the glue
+    for j = 1:size(glue,1)
+        if glue(j,1) == 0
+            rectangle('Position', [glue(j,2), glue(j,3) - 0.05, glue(j,4), 0.1], 'FaceColor', 'r')
+        else
+            rectangle('Position', [glue(j,2) - 0.05, glue(j,3), 0.1, glue(j,4)], 'FaceColor', 'r')
+        end
+    end
+
+    % plot the x axis
+    plot([0, 100], [0, 0], 'k', 'LineWidth', 2)
+
+    % plot the y axis
+    plot([0, 0], [0, 100], 'k', 'LineWidth', 2)
+
+    % set the axis limits
+    xlim([0, 100])
+    ylim([0, 100])
+
+    % label the axes
+    xlabel('x (mm)')
+    ylabel('y (mm)')
+
+    % title the figure
+    title(['Cross Section at x = ', num2str(x_change(i)), ' mm'])
 end
 
-
-params = dictionary(x_change, x_sections); % dictionary of the cross sections
 
 %% 3. Calculate Sectional Properties
 % set up arrays to store the sectional properties
@@ -129,7 +171,7 @@ b =     zeros(length(x_change), 1); % width of cross section that crosses the ce
 % for each cross section, calculate the sectional properties
 for i = 1:length(x_change)
     % find the cross section
-    x_section = params(x_change(i));
+    x_section = x_section_params(x_change(i));
     x_section = x_section{1, 1};
 
     % setup a table for the cross section
@@ -198,7 +240,16 @@ for i = 1:length(x_change)
     Qcent(i) = sum(x_section_cent_bot.area.*(ybar(i) - ybar_cent_bot));
 
     % find Q at the glue location
-    % Qglue(i) = sum(x_section(:,3).*(x_section(:,2) - ybot(i)).*x_section(:,4).^2);
+    % find the glue locations of the cross section
+    glue = glue_params(x_change(i));
+    
+    % if there are glue locations, calculate Q at the glue locations
+
+    % check if the glue is horizontal or vertical
+    % assuming that all glue for a given cross section is either all horizontal or all vertical
+    if ~isempty(glue)
+
+    end
 
 end
 
@@ -260,6 +311,29 @@ bridge_properties.FOS_shear = material_properties.tau_max./bridge_properties.tau
 % DELIVERABLE 1 for train centered on bridge
 FOS_tens = material_properties.sigma_tens(1)/(max(BMDi(121,:))*abs(bridge_properties.ybot(1) - bridge_properties.ybar(1))/bridge_properties.I(1));
 FOS_comp = material_properties.sigma_comp(1)/(max(BMDi(121,:))*abs(bridge_properties.ytop(1) - bridge_properties.ybar(1))/bridge_properties.I(1));
+
+% plot the SFD and BMD envelopes on separate figures
+% SFD is red
+% BMD is blue
+figure
+hold on
+plot(x, SFD, 'r')
+plot(x, -SFD, 'r')
+
+title("Shear Force Envelope")
+xlabel("Location on Bridge (mm)")
+ylabel("Shear Force (N)")
+legend('Shear Force')
+
+figure
+hold on
+plot(x, BMD, 'b')
+plot(x, -BMD, 'b')
+
+title("Bending Moment Envelope")
+xlabel("Location on Bridge (mm)")
+ylabel("Bending Moment (N*mm)")
+legend('Bending Moment')
 
 % bridge_properties.FOS_glue =
 % bridge_properties.FOS_buck1 =
