@@ -72,7 +72,21 @@ for i = 1:n+1+l_train
     x_train = x_train + dL; % move the train to the right by 1 increment
 end
 
-SFD = max(abs(SFDi)); % SFD envelope
+% the SFD envelope is the maximum shear force at each cut
+% if the shear force is positive, the maximum shear force is the maximum positive shear force
+% if the shear force is negative, the maximum shear force is the maximum negative shear force
+% keep the sign of the maximum shear force
+SFD = zeros(1, n+1); % SFD envelope
+for i = 1:n+1
+    min_F = min(SFDi(:,i));
+    max_F = max(SFDi(:,i));
+    if abs(min_F) > max_F
+        SFD(i) = min_F;
+    else
+        SFD(i) = max_F;
+    end
+end
+
 BMD = max(BMDi); % BMD envelope
 
 %% 2. Define Cross Section
@@ -276,13 +290,13 @@ end
 
 %% 4. Calculate Applied Stress
 % stress at the top across the entire bridge
-bridge_properties.sigma_top = BMD.*abs(bridge_properties.ytop - bridge_properties.ybar)./bridge_properties.I;
+bridge_properties.sigma_top = BMD.'.*abs(bridge_properties.ytop - bridge_properties.ybar)./bridge_properties.I;
 
 % stress at the bottom across the entire bridge
-bridge_properties.sigma_bot = BMD.*abs(bridge_properties.ybot - bridge_properties.ybar)./bridge_properties.I;
+bridge_properties.sigma_bot = BMD.'.*abs(bridge_properties.ybot - bridge_properties.ybar)./bridge_properties.I;
 
 % shear stress across the entire bridge at the centroidal axis
-bridge_properties.tau_xy = SFD.*bridge_properties.Qcent./bridge_properties.I./bridge_properties.b;
+bridge_properties.tau_xy = SFD.'.*bridge_properties.Qcent./bridge_properties.I./bridge_properties.b;
 
 % T_glue =
 
@@ -318,7 +332,7 @@ FOS_comp = material_properties.sigma_comp(1)/(max(BMDi(121,:))*abs(bridge_proper
 figure
 hold on
 plot(x, SFD, 'r')
-plot(x, -SFD, 'r')
+plot(x, zeros(1, n+1), 'k')
 
 title("Shear Force Envelope")
 xlabel("Location on Bridge (mm)")
@@ -327,8 +341,11 @@ legend('Shear Force')
 
 figure
 hold on
+% invert the y axis so that positive bending moments are plotted downwards
+set(gca, 'YDir','reverse')
 plot(x, BMD, 'b')
-plot(x, -BMD, 'b')
+plot(x, zeros(1, n+1), 'k')
+
 
 title("Bending Moment Envelope")
 xlabel("Location on Bridge (mm)")
@@ -340,10 +357,29 @@ legend('Bending Moment')
 % bridge_properties.FOS_buck2 =
 % bridge_properties.FOS_buck3 =
 % bridge_properties.FOS_buckV =
-% %% 7. Min FOS and the failure load Pfail
+
+% plot the FOS
+figure
+hold on
+plot(x, bridge_properties.FOS_tens.', 'r')
+plot(x, bridge_properties.FOS_comp.', 'b')
+plot(x, abs(bridge_properties.FOS_shear.'), 'g')
+
+plot(x, zeros(1, n+1), "k")
+
+title("Factors of Safety")
+xlabel("Location on Bridge (mm)")
+ylabel("Factor of Safety")
+legend("Tensile Factor of Safety", "Compressive Factor of Safety", "Shear Factor of Safety")
+
+% resize to only show FOS up to 10
+ylim([0, 10])
+
+
+%% 7. Min FOS and the failure load Pfail
 % minFOS =
 % Pf =
-% %% 8. Vfail and Mfail
+%% 8. Vfail and Mfail
 % Mf_tens =
 % Mf_comp =
 % Vf_shear =
