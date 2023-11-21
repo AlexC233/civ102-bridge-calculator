@@ -350,6 +350,7 @@ FOS_comp = material_properties.sigma_comp(1)/(max(BMDi(121,:))*abs(bridge_proper
 figure
 hold on
 plot(x, SFD, 'r')
+plot(x, -SFD, 'r')
 plot(x, zeros(1, n+1), 'k')
 
 title("Shear Force Envelope")
@@ -362,6 +363,7 @@ hold on
 % invert the y axis so that positive bending moments are plotted downwards
 set(gca, 'YDir','reverse')
 plot(x, BMD, 'b')
+plot(x, -BMD, 'b')
 plot(x, zeros(1, n+1), 'k')
 
 
