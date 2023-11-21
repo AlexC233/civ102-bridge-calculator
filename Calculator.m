@@ -262,7 +262,24 @@ for i = 1:length(x_change)
     % check if the glue is horizontal or vertical
     % assuming that all glue for a given cross section is either all horizontal or all vertical
     if ~isempty(glue)
+        b = 0; % width of the glue
+        if glue{1, 1}(1, 1) == 0
+            for j = 1:size(glue{1, 1}, 1)
+                b = b + glue{1, 1}(j, 4);
+            end
 
+            % find the subsections with the top of the subsection below or at the glue
+            x_section_glue = x_section(x_section.ytop <= glue{1, 1}(1, 3), :);
+            q_glue = 0;
+
+            for j = 1:size(x_section_glue, 1)
+                q_glue = q_glue + x_section_glue.area(j)*(x_section_glue.ybar(j) - ybar(i));
+            end
+
+            Qglue(i) = q_glue;
+
+        end
+        
     end
 
 end
@@ -283,7 +300,7 @@ for i = 1:length(x_change)
     bridge_properties.ytop(x_in_section) = ytop(i);
     bridge_properties.I(x_in_section) = I(i);
     bridge_properties.Qcent(x_in_section) = Qcent(i);
-    %bridge_properties.Qglue(x_in_section) = Qglue(i);
+    bridge_properties.Qglue(x_in_section) = Qglue(i);
     bridge_properties.b(x_in_section) = b(i);
 end
 
@@ -298,7 +315,7 @@ bridge_properties.sigma_bot = BMD.'.*abs(bridge_properties.ybot - bridge_propert
 % shear stress across the entire bridge at the centroidal axis
 bridge_properties.tau_xy = SFD.'.*bridge_properties.Qcent./bridge_properties.I./bridge_properties.b;
 
-% T_glue =
+bridge_properties.tau_g = SFD.'.*bridge_properties.Qglue./bridge_properties.I./bridge_properties.b;
 
 %% 5. Material and Thin Plate Buckling Capacities
 % setup a table to store the capacities of the material
@@ -321,6 +338,7 @@ material_properties.tau_gmax = 2;
 bridge_properties.FOS_tens = material_properties.sigma_tens./bridge_properties.sigma_top;
 bridge_properties.FOS_comp = material_properties.sigma_comp./bridge_properties.sigma_bot;
 bridge_properties.FOS_shear = material_properties.tau_max./bridge_properties.tau_xy;
+bridge_properties.FOS_glue = material_properties.tau_gmax./bridge_properties.tau_g;
 
 % DELIVERABLE 1 for train centered on bridge
 FOS_tens = material_properties.sigma_tens(1)/(max(BMDi(121,:))*abs(bridge_properties.ybot(1) - bridge_properties.ybar(1))/bridge_properties.I(1));
@@ -364,17 +382,19 @@ hold on
 plot(x, bridge_properties.FOS_tens.', 'r')
 plot(x, bridge_properties.FOS_comp.', 'b')
 plot(x, abs(bridge_properties.FOS_shear.'), 'g')
+plot(x, abs(bridge_properties.FOS_glue.'), 'm')
 
 plot(x, zeros(1, n+1), "k")
+
+plot(x, ones(1, n+1), "k--")
 
 title("Factors of Safety")
 xlabel("Location on Bridge (mm)")
 ylabel("Factor of Safety")
-legend("Tensile Factor of Safety", "Compressive Factor of Safety", "Shear Factor of Safety")
+legend("Tensile Factor of Safety", "Compressive Factor of Safety", "Shear Factor of Safety", "Glue Shear Factor of Safety")
 
 % resize to only show FOS up to 10
 ylim([0, 10])
-
 
 %% 7. Min FOS and the failure load Pfail
 % minFOS =
