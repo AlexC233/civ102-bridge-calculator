@@ -92,21 +92,24 @@ BMD = max(BMDi); % BMD envelope
 %% 2. Define Cross Section
 % x_sections is stored as a dictionary with the keys being the x location along the bridge and the values being the cross section at that location
 % each cross section is stored as an array of subsections with the following values:
-% [x, y, dx, dy; ...]
+% [x, y, dx, dy, lc; ...]
 % x is the x location of the reference point of the subsection
 % y is the y location of the reference point of the subsection
 % dx is the width of the subsection
 % dy is the height of the subsection
+% lc is the load case of the subsection (from 1 to 3)
 % the reference point is the bottom left corner of the subsection
 % the sections are constructed from the bottom up with 0, 0 being the bottom left corner of the bridge
 
 x_change = [0]; % x locations of cross section changes
-x_sections = {[10, 0, 80, 1.27; 
-               10, 1.27, 1.27, 75-1.27*2; 
-               90-1.27, 1.27, 1.27, 75-2*1.27; 
-               10, 75-1.27, 5 + 1.27, 1.27;
-               90-5-1.27, 75-1.27, 5+1.27, 1.27; 
-               0, 75, 100, 1.27]}; % cross sections of the bridge
+x_sections = {[10, 0, 80, 1.27, 1; % bottom flange
+               10, 1.27, 1.27, 75, 3; % left web
+               90-1.27, 1.27, 1.27, 75, 3; % right web 
+               10+1.27, 75-1.27, 5, 1.27, 1; % left glue connection
+               90-5-1.27, 75-1.27, 5, 1.27, 1; % right glue connection
+               0, 75, 10, 1.27, 2; % left top flange
+               10 + 1.27, 75, 100 - 20 - 2*1.27, 1.27, 1; % center top flange
+               90, 75, 10, 1.27, 2]}; % right top flange
 
 % The locations of the glue are stored as a dictionary with the keys being the x location along the bridge and the values being the locations of the glue
 % each glue location is stored as an array of subsections with the following values:
@@ -125,8 +128,9 @@ glue_params = dictionary(x_change, glue_locations); % dictionary of the glue loc
 
 % DEBUG
 % plot the cross sections on separate figures
-% glue is red
-% cross section is blue
+% glue is yellow
+% color the cross section based on the load case
+
 for i = 1:length(x_change)
     % find the cross section
     x_section = x_section_params(x_change(i));
@@ -140,15 +144,23 @@ for i = 1:length(x_change)
     figure
     hold on
     for j = 1:size(x_section,1)
-        rectangle('Position', [x_section(j,1), x_section(j,2), x_section(j,3), x_section(j,4)], 'FaceColor', 'y')
+        % determine the color of the subsection based on the load case
+        if x_section(j,5) == 1
+            color = 'b';
+        elseif x_section(j,5) == 2
+            color = 'r';
+        elseif x_section(j,5) == 3
+            color = 'g';
+        end
+        rectangle('Position', [x_section(j,1), x_section(j,2), x_section(j,3), x_section(j,4)], 'FaceColor', color)
     end
 
     % plot the glue
     for j = 1:size(glue,1)
         if glue(j,1) == 0
-            rectangle('Position', [glue(j,2), glue(j,3) - 0.05, glue(j,4), 0.1], 'FaceColor', 'r')
+            rectangle('Position', [glue(j,2), glue(j,3) - 0.05, glue(j,4), 0.1], 'FaceColor', 'y')
         else
-            rectangle('Position', [glue(j,2) - 0.05, glue(j,3), 0.1, glue(j,4)], 'FaceColor', 'r')
+            rectangle('Position', [glue(j,2) - 0.05, glue(j,3), 0.1, glue(j,4)], 'FaceColor', 'y')
         end
     end
 
@@ -189,7 +201,7 @@ for i = 1:length(x_change)
     x_section = x_section{1, 1};
 
     % setup a table for the cross section
-    x_section = array2table(x_section, 'VariableNames', {'x', 'y', 'dx', 'dy'});
+    x_section = array2table(x_section, 'VariableNames', {'x', 'y', 'dx', 'dy', 'lc'});
 
     % add a column for the area of each subsection
     x_section.area = x_section.dx.*x_section.dy;
@@ -243,9 +255,9 @@ for i = 1:length(x_change)
     x_section_cent_bot.ybar = x_section_cent_bot.y + x_section_cent_bot.dy/2;
 
     % DEBUG plot these subsections
-    for j = 1:size(x_section_cent_bot,1)
-        rectangle('Position', [x_section_cent_bot.x(j), x_section_cent_bot.ybot(j), x_section_cent_bot.dx(j), x_section_cent_bot.dy(j)], 'FaceColor', 'r')
-    end
+    % for j = 1:size(x_section_cent_bot,1)
+    %     rectangle('Position', [x_section_cent_bot.x(j), x_section_cent_bot.ybot(j), x_section_cent_bot.dx(j), x_section_cent_bot.dy(j)], 'FaceColor', 'r')
+    % end
 
     % calculate the centroidal axis of the subsections combined
     ybar_cent_bot = sum(x_section_cent_bot.area.*x_section_cent_bot.ybar)/sum(x_section_cent_bot.area);
@@ -268,8 +280,14 @@ for i = 1:length(x_change)
                 b = b + glue{1, 1}(j, 4);
             end
 
-            % find the subsections with the top of the subsection below or at the glue
-            x_section_glue = x_section(x_section.ytop <= glue{1, 1}(1, 3), :);
+            % find the subsections with the start of the subsection below or at the glue
+            x_section_glue = x_section(x_section.ybot <= glue{1, 1}(1, 3), :);
+            % trim the subsections to only include the parts below or at the glue
+            x_section_glue.dy(x_section_glue.ytop > glue{1, 1}(1, 3)) = glue{1, 1}(1, 3) - x_section_glue.ybot(x_section_glue.ytop > glue{1, 1}(1, 3));
+            % recalculate the area of the subsections
+            x_section_glue.area = x_section_glue.dx.*x_section_glue.dy;
+            % recalculate the centroidal axis of the subsections
+            x_section_glue.ybar = x_section_glue.y + x_section_glue.dy/2;
             q_glue = 0;
 
             for j = 1:size(x_section_glue, 1)
@@ -316,6 +334,8 @@ bridge_properties.sigma_bot = BMD.'.*abs(bridge_properties.ybot - bridge_propert
 bridge_properties.tau_xy = SFD.'.*bridge_properties.Qcent./bridge_properties.I./bridge_properties.b;
 
 bridge_properties.tau_g = SFD.'.*bridge_properties.Qglue./bridge_properties.I./bridge_properties.b;
+
+
 
 %% 5. Material and Thin Plate Buckling Capacities
 % setup a table to store the capacities of the material
