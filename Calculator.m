@@ -102,9 +102,9 @@ BMD = max(BMDi); % BMD envelope
 % the sections are constructed from the bottom up with 0, 0 being the bottom left corner of the bridge
 
 x_change = [0]; % x locations of cross section changes
-x_sections = {[10, 0, 80, 1.27, 1; % bottom flange
-               10, 1.27, 1.27, 75, 3; % left web
-               90-1.27, 1.27, 1.27, 75, 3; % right web 
+x_sections = {[10+1.27, 0, 80-2*1.27, 1.27, 1; % bottom flange
+               10, 0, 1.27, 75+1.27, 3; % left web
+               90-1.27, 0, 1.27, 75+1.27, 3; % right web 
                10+1.27, 75-1.27, 5, 1.27, 1; % left glue connection
                90-5-1.27, 75-1.27, 5, 1.27, 1; % right glue connection
                0, 75, 10, 1.27, 2; % left top flange
