@@ -111,6 +111,38 @@ x_sections = {[10+1.27, 0, 80-2*1.27, 1.27, 1; % bottom flange
                10 + 1.27, 75, 100 - 20 - 2*1.27, 1.27, 1; % center top flange
                90, 75, 10, 1.27, 2]}; % right top flange
 
+x_sections = {
+            [11.865, 0, 1.27, 120, 3;
+             86.865, 0, 1.27, 120, 3;
+             11.865+1.27, 120-3*1.27, 5, 1.27, 1;
+             86.865-5, 120-0-3*1.27, 5, 1.27, 1;
+             0, 120-2*1.27, 11.865, 1.27, 2;
+             11.865+1.27, 120-2*1.27, 75-1.27, 1.27, 1;
+             86.865+1.27, 120-2*1.27, 11.865, 1.27, 2;
+             0, 120-1*1.27, 11.865, 1.27, 2;
+             11.865+1.27, 120-1*1.27, 75-1.27, 1.27, 1;
+             86.865+1.27, 120-1*1.27, 11.865, 1.27, 2;
+            ]
+            }
+
+x_sections = {
+            [
+                10+1.27, 0, 80-2*1.27, 1.27, 1;
+                10, 0, 1.27, 80, 3;
+                90-1.27, 0, 1.27, 80, 3;
+                10+1.27, 76.19, 5, 1.27, 1;
+                90-1.27-5, 76.19, 5, 1.27, 1;
+                0, 77.46, 10, 1.27, 2;
+                10+1.27, 77.46, 100-20-2*1.27, 1.27, 1;
+                90, 77.46, 10, 1.27, 2;
+                0, 77.46+1.27, 10, 1.27, 2;
+                10+1.27, 77.46+1.27, 100-20-2*1.27, 1.27, 1;
+                90, 77.46+1.27, 10, 1.27, 2;                
+            ]
+            }
+
+diaphragms = [0, 400, 800, 1200];
+
 % The locations of the glue are stored as a dictionary with the keys being the x location along the bridge and the values being the locations of the glue
 % each glue location is stored as an array of subsections with the following values:
 % [dir, x, y, length/width; ...]
@@ -123,10 +155,18 @@ x_sections = {[10+1.27, 0, 80-2*1.27, 1.27, 1; % bottom flange
 glue_locations = {[0, 10, 75, 1.27 + 5;
                    0, 10 + 80 - 5 - 1.27, 75, 1.27 + 5]};
 
+glue_locations = {
+                [
+                    0, 11.865, 120-2*1.27, 1.27+5;
+                    0, 86.865, 120-2*1.27, 1.27+5;
+                    0, 0, 120-1.27, 100
+                ]
+                 };
+
 x_section_params = dictionary(x_change, x_sections); % dictionary of the cross sections
 glue_params = dictionary(x_change, glue_locations); % dictionary of the glue locations
 
-% DEBUG
+%% DEBUG Plotting Cross Sections
 % plot the cross sections on separate figures
 % glue is yellow
 % color the cross section based on the load case
@@ -273,32 +313,32 @@ for i = 1:length(x_change)
 
     % check if the glue is horizontal or vertical
     % assuming that all glue for a given cross section is either all horizontal or all vertical
-    if ~isempty(glue)
-        b = 0; % width of the glue
-        if glue{1, 1}(1, 1) == 0
-            for j = 1:size(glue{1, 1}, 1)
-                b = b + glue{1, 1}(j, 4);
-            end
+    % if ~isempty(glue)
+    %     b = 0; % width of the glue
+    %     if glue{1, 1}(1, 1) == 0
+    %         for j = 1:size(glue{1, 1}, 1)
+    %             b = b + glue{1, 1}(j, 4);
+    %         end
 
-            % find the subsections with the start of the subsection below or at the glue
-            x_section_glue = x_section(x_section.ybot <= glue{1, 1}(1, 3), :);
-            % trim the subsections to only include the parts below or at the glue
-            x_section_glue.dy(x_section_glue.ytop > glue{1, 1}(1, 3)) = glue{1, 1}(1, 3) - x_section_glue.ybot(x_section_glue.ytop > glue{1, 1}(1, 3));
-            % recalculate the area of the subsections
-            x_section_glue.area = x_section_glue.dx.*x_section_glue.dy;
-            % recalculate the centroidal axis of the subsections
-            x_section_glue.ybar = x_section_glue.y + x_section_glue.dy/2;
-            q_glue = 0;
+    %         % find the subsections with the start of the subsection below or at the glue
+    %         x_section_glue = x_section(x_section.ybot <= glue{1, 1}(1, 3), :);
+    %         % trim the subsections to only include the parts below or at the glue
+    %         x_section_glue.dy(x_section_glue.ytop > glue{1, 1}(1, 3)) = glue{1, 1}(1, 3) - x_section_glue.ybot(x_section_glue.ytop > glue{1, 1}(1, 3));
+    %         % recalculate the area of the subsections
+    %         x_section_glue.area = x_section_glue.dx.*x_section_glue.dy;
+    %         % recalculate the centroidal axis of the subsections
+    %         x_section_glue.ybar = x_section_glue.y + x_section_glue.dy/2;
+    %         q_glue = 0;
 
-            for j = 1:size(x_section_glue, 1)
-                q_glue = q_glue + x_section_glue.area(j)*(x_section_glue.ybar(j) - ybar(i));
-            end
+    %         for j = 1:size(x_section_glue, 1)
+    %             q_glue = q_glue + x_section_glue.area(j)*(x_section_glue.ybar(j) - ybar(i));
+    %         end
 
-            Qglue(i) = q_glue;
+    %         Qglue(i) = q_glue;
 
-        end
+    %     end
         
-    end
+    % end
 
 end
 
@@ -339,30 +379,101 @@ bridge_properties.tau_g = SFD.'.*bridge_properties.Qglue./bridge_properties.I./b
 
 %% 5. Material and Thin Plate Buckling Capacities
 % setup a table to store the capacities of the material
-material_properties = array2table(zeros(1, 10), "VariableNames", ["E", "mu", "sigma_tens", "sigma_comp", "tau_max", "tau_gmax", "sigma_buck_flange_webs", "sigma_buck_flange_tips", "sigma_buck_webs", "tau_buck_webs"]);
+material_properties = array2table(zeros(n+1, 11), "VariableNames", ["x", "E", "mu", "sigma_tens", "sigma_comp", "tau_max", "tau_gmax", "sigma_buck_flange_webs", "sigma_buck_flange_tips", "sigma_buck_webs", "tau_buck_webs"]);
 
-material_properties.E = 4000;
-material_properties.mu = 0.2;
+material_properties.E = 4000 * ones(n+1, 1);
+material_properties.mu = 0.2 * ones(n+1, 1);
 
-material_properties.sigma_tens = 30;
-material_properties.sigma_comp = 6;
-material_properties.tau_max = 4;
+material_properties.sigma_tens = 30 * ones(n+1, 1);
+material_properties.sigma_comp = 6 * ones(n+1, 1);
+material_properties.tau_max = 4 * ones(n+1, 1);
 
-material_properties.tau_gmax = 2;
+material_properties.tau_gmax = 2 * ones(n+1, 1);
 
-% S_buck1 =
-% S_buck2 =
-% S_buck3 =
-% T_buck =
+% look through each cross section and calculate the buckling capacities
+for i = 1:length(x_change)
+    x_section = x_section_params(x_change(i));
+
+    % get all subsections that are assigned load case 1
+    x_sections_lc1 = x_section{1, 1}(x_section{1, 1}(:,5) == 1, :);
+
+    sigma_buck1 = inf;
+    for j = 1:size(x_sections_lc1, 1)
+        % calculate buckling capacity for each subsection
+        % if it is the lowest buckling capacity, set buck1 to that value and highlight the subsection in black
+        % if it is not the lowest buckling capacity, highlight the subsection in blue
+        % sigma = (4 * pi^2 * E) / (12 * (1 - mu^2)) * (t / b)^2
+        % E and mu are constants
+        sigma_buck1_i = (4 * pi^2 * material_properties.E(1)) / (12 * (1 - material_properties.mu(1)^2)) * (x_sections_lc1(j,4) / x_sections_lc1(j,3))^2;
+        if sigma_buck1_i < sigma_buck1
+            sigma_buck1 = sigma_buck1_i;
+        end
+
+    end
+
+    % get all subsections that are assigned load case 2
+    x_sections_lc2 = x_section{1, 1}(x_section{1, 1}(:,5) == 2, :);
+
+    sigma_buck2 = inf;
+    for j = 1:size(x_sections_lc2, 1)
+        % calculate buckling capacity for each subsection
+        % if it is the lowest buckling capacity, set buck2 to that value and highlight the subsection in black
+        % if it is not the lowest buckling capacity, highlight the subsection in blue
+        % sigma = (0.425 * pi^2 * E) / (12 * (1 - mu^2)) * (t / b)^2
+        % E and mu are constants
+        sigma_buck2_i = (0.425 * pi^2 * material_properties.E(1)) / (12 * (1 - material_properties.mu(1)^2)) * (x_sections_lc2(j,4) / x_sections_lc2(j,3))^2;
+        if sigma_buck2_i < sigma_buck2
+            sigma_buck2 = sigma_buck2_i;
+        end
+    end
+
+    % get all subsections that are assigned load case 3
+    x_sections_lc3 = x_section{1, 1}(x_section{1, 1}(:,5) == 3, :);
+
+    sigma_buck3 = inf;
+    for j = 1:size(x_sections_lc3, 1)
+        % calculate buckling capacity for each subsection
+        % if it is the lowest buckling capacity, set buck3 to that value and highlight the subsection in black
+        % if it is not the lowest buckling capacity, highlight the subsection in blue
+        % sigma = (6 * pi^2 * E) / (12 * (1 - mu^2)) * (t / b)^2
+        % b is the distance between the centroidal axis and the top of the subsection
+        % E and mu are constants
+        % find the ybar of the bridge at this location
+        % look for the ybar of the bridge at x = x_change(i)
+        ybar_i = bridge_properties.ybar(bridge_properties.x == x_change(i));
+
+        sigma_buck3_i = (6 * pi^2 * material_properties.E(1)) / (12 * (1 - material_properties.mu(1)^2)) * (x_sections_lc3(j,4) / (x_sections_lc3(j,2) + x_sections_lc3(j, 4) - ybar_i))^2;
+        if sigma_buck3_i < sigma_buck3
+            sigma_buck3 = sigma_buck3_i;
+        end
+    end
+
+    % fill the table with the buckling capacities until the next cross section without overfilling
+    if i < length(x_change)
+        material_properties.sigma_buck_flange_webs(x_change(i) <= bridge_properties.x & bridge_properties.x < x_change(i+1)) = sigma_buck1;
+        material_properties.sigma_buck_flange_tips(x_change(i) <= bridge_properties.x & bridge_properties.x < x_change(i+1)) = sigma_buck2;
+        material_properties.sigma_buck_webs(x_change(i) <= bridge_properties.x & bridge_properties.x < x_change(i+1)) = sigma_buck3;
+    else
+        material_properties.sigma_buck_flange_webs(x_change(i) <= bridge_properties.x) = sigma_buck1;
+        material_properties.sigma_buck_flange_tips(x_change(i) <= bridge_properties.x) = sigma_buck2;
+        material_properties.sigma_buck_webs(x_change(i) <= bridge_properties.x) = sigma_buck3;
+    end
+end
+
+% calculate the shear buckling capacity of the webs
+
 %% 6. FOS
-bridge_properties.FOS_tens = material_properties.sigma_tens./bridge_properties.sigma_top;
-bridge_properties.FOS_comp = material_properties.sigma_comp./bridge_properties.sigma_bot;
+bridge_properties.FOS_tens = material_properties.sigma_tens./bridge_properties.sigma_bot;
+bridge_properties.FOS_comp = material_properties.sigma_comp./bridge_properties.sigma_top;
 bridge_properties.FOS_shear = material_properties.tau_max./bridge_properties.tau_xy;
 bridge_properties.FOS_glue = material_properties.tau_gmax./bridge_properties.tau_g;
+bridge_properties.FOS_flange_webs = material_properties.sigma_buck_flange_webs./bridge_properties.sigma_top;
+bridge_properties.FOS_flange_tips = material_properties.sigma_buck_flange_tips./bridge_properties.sigma_top;
+bridge_properties.FOS_webs = material_properties.sigma_buck_webs./bridge_properties.sigma_top;
 
 % DELIVERABLE 1 for train centered on bridge
-FOS_tens = material_properties.sigma_tens(1)/(max(BMDi(121,:))*abs(bridge_properties.ybot(1) - bridge_properties.ybar(1))/bridge_properties.I(1));
-FOS_comp = material_properties.sigma_comp(1)/(max(BMDi(121,:))*abs(bridge_properties.ytop(1) - bridge_properties.ybar(1))/bridge_properties.I(1));
+% FOS_tens = material_properties.sigma_tens(1)/(max(BMDi(121,:))*abs(bridge_properties.ybot(1) - bridge_properties.ybar(1))/bridge_properties.I(1));
+% FOS_comp = material_properties.sigma_comp(1)/(max(BMDi(121,:))*abs(bridge_properties.ytop(1) - bridge_properties.ybar(1))/bridge_properties.I(1));
 
 % plot the SFD and BMD envelopes on separate figures
 % SFD is red
@@ -405,6 +516,9 @@ plot(x, bridge_properties.FOS_tens.', 'r')
 plot(x, bridge_properties.FOS_comp.', 'b')
 plot(x, abs(bridge_properties.FOS_shear.'), 'g')
 plot(x, abs(bridge_properties.FOS_glue.'), 'm')
+plot(x, bridge_properties.FOS_flange_webs.', 'c')
+plot(x, bridge_properties.FOS_flange_tips.', 'y')
+plot(x, bridge_properties.FOS_webs.', 'k')
 
 plot(x, zeros(1, n+1), "k")
 
@@ -413,7 +527,7 @@ plot(x, ones(1, n+1), "k--")
 title("Factors of Safety")
 xlabel("Location on Bridge (mm)")
 ylabel("Factor of Safety")
-legend("Tensile Factor of Safety", "Compressive Factor of Safety", "Shear Factor of Safety", "Glue Shear Factor of Safety")
+legend("Tensile Factor of Safety", "Compressive Factor of Safety", "Shear Factor of Safety", "Glue Shear Factor of Safety", "Flange Webs Buckling Factor of Safety", "Flange Tips Buckling Factor of Safety", "Webs Buckling Factor of Safety", "FOS = 1")
 
 % resize to only show FOS up to 10
 ylim([0, 10])
