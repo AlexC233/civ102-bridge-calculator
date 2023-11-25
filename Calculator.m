@@ -89,19 +89,18 @@ BMD = max(BMDi); % BMD envelope
 % subsections stacked on top of each other have the same id
 % the reference point is the bottom left corner of the subsection
 % the sections are constructed from the bottom up with 0, 0 being the bottom left corner of the bridge
-
-x_change = [0]; % x locations of cross section changes
-x_sections = {[10+1.27, 0, 80-2*1.27, 1.27, 1; % bottom flange
-               10, 0, 1.27, 75+1.27, 3; % left web
-               90-1.27, 0, 1.27, 75+1.27, 3; % right web 
-               10+1.27, 75-1.27, 5, 1.27, 1; % left glue connection
-               90-5-1.27, 75-1.27, 5, 1.27, 1; % right glue connection
-               0, 75, 10, 1.27, 2; % left top flange
-               10 + 1.27, 75, 100 - 20 - 2*1.27, 1.27, 1; % center top flange
-               90, 75, 10, 1.27, 2]}; % right top flange
+% x_change = [0]; % x locations of cross section changes
+% x_sections = {[10+1.27, 0, 80-2*1.27, 1.27, 0, 0; % bottom flange
+%                10, 0, 1.27, 75+1.27, 3, 0; % left web
+%                90-1.27, 0, 1.27, 75+1.27, 0, 0; % right web 
+%                10+1.27, 75-1.27, 5, 1.27, 0, 0; % left glue connection
+%                90-5-1.27, 75-1.27, 5, 1.27, 0, 0; % right glue connection
+%                0, 75, 10, 1.27, 2, 0; % left top flange
+%                10 + 1.27, 75, 100 - 20 - 2*1.27, 1.27, 1, 0; % center top flange
+%                90, 75, 10, 1.27, 2, 1]}; % right top flange
 
 % location of the diaphragms along the bridge
-diaphragms = [0, 400, 800, 1200];
+% diaphragms = [0, 400, 800, 1200];
 
 %% Glue
 % The locations of the glue are stored as a dictionary with the keys being the x location along the bridge and the values being the locations of the glue
@@ -113,13 +112,29 @@ diaphragms = [0, 400, 800, 1200];
 % length/width is the length or width of the glue
 % calculate is either 0 or 1 with 1 being the glue that needs to be considered for shear
 % the reference point is the bottom left corner of the glue
-% the glues are constructed from the bottom up with 0, 0 being the bottom left corner of the bridge 
-glue_locations = {[0, 10, 75, 1.27 + 5;
-                   0, 10 + 80 - 5 - 1.27, 75, 1.27 + 5]};
+% % the glues are constructed from the bottom up with 0, 0 being the bottom left corner of the bridge 
+% glue_locations = {[0, 10, 75, 1.27 + 5, 1;
+%                    0, 10 + 80 - 5 - 1.27, 75, 1.27 + 5, 1]};
+
+% x_section_params = dictionary(x_change, x_sections); % dictionary of the cross sections
+% glue_params = dictionary(x_change, glue_locations); % dictionary of the glue locations
+
+%% Design 0
+x_change = [0]; % x locations of cross section changes
+x_sections = {[10+1.27, 0, 80-2*1.27, 1.27, 0, 0; % bottom flange
+               10, 0, 1.27, 75+1.27, 3, 0; % left web
+               90-1.27, 0, 1.27, 75+1.27, 0, 0; % right web 
+               10+1.27, 75-1.27, 5, 1.27, 0, 0; % left glue connection
+               90-5-1.27, 75-1.27, 5, 1.27, 0, 0; % right glue connection
+               0, 75, 10, 1.27, 2, 0; % left top flange
+               10 + 1.27, 75, 100 - 20 - 2*1.27, 1.27, 1, 0; % center top flange
+               90, 75, 10, 1.27, 2, 1]}; % right top flange
+diaphragms = [0, 400, 800, 1200];
+glue_locations = {[0, 10, 75, 1.27 + 5, 1;
+                   0, 10 + 80 - 5 - 1.27, 75, 1.27 + 5, 1]};
 
 x_section_params = dictionary(x_change, x_sections); % dictionary of the cross sections
 glue_params = dictionary(x_change, glue_locations); % dictionary of the glue locations
-
 %% DEBUG Plotting Cross Sections
 % plot the cross sections on separate figures
 % glue is yellow
