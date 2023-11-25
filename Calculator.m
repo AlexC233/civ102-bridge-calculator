@@ -1,15 +1,15 @@
 clear; clc; close all;
 %% 0. Initialize Parameters
 L = 1200; % Length of bridge
-n = 1200; % Discretize into 1 mm seg.
+n = 2400; % Discretize into 1 mm seg.
 dL = L/n; % Length of each segment
-P = 400; % Total weight of train [N]
+P = 1; % Total weight of train [N]
 x = linspace(0, L, n+1); % x-axis
 
 %% 1. SFD, BMD under train loading
 x_train = [52 228 392 568 732 908]; % Train Load Locations (the 6 wheels)
 l_train = 960; % Train Length
-P_factors = [1 1 1 1 1 1]; % Load Factors (the 6 wheels)
+P_factors = [1.35 1.35 1 1 1 1]; % Load Factors (the 6 wheels)
 P_train = P_factors .* P/sum(P_factors) * -1; % load of each wheel
 
 % set up the SFD and BMD arrays of the bridge for every discretized location of the train
@@ -76,17 +76,17 @@ end
 % if the shear force is positive, the maximum shear force is the maximum positive shear force
 % if the shear force is negative, the maximum shear force is the maximum negative shear force
 % keep the sign of the maximum shear force
-SFD = zeros(1, n+1); % SFD envelope
-for i = 1:n+1
-    min_F = min(SFDi(:,i));
-    max_F = max(SFDi(:,i));
-    if abs(min_F) > max_F
-        SFD(i) = min_F;
-    else
-        SFD(i) = max_F;
-    end
-end
-
+% SFD = zeros(1, n+1); % SFD envelope
+% for i = 1:n+1
+%     min_F = min(SFDi(:,i));
+%     max_F = max(SFDi(:,i));
+%     if abs(min_F) > max_F
+%         SFD(i) = min_F;
+%     else
+%         SFD(i) = max_F;
+%     end
+% end
+SFD = max(abs(SFDi));
 BMD = max(BMDi); % BMD envelope
 
 %% 2. Define Cross Section
@@ -123,7 +123,7 @@ x_sections = {
              11.865+1.27, 120-1*1.27, 75-1.27, 1.27, 1;
              86.865+1.27, 120-1*1.27, 11.865, 1.27, 2;
             ]
-            }
+            };
 
 x_sections = {
             [
@@ -139,7 +139,7 @@ x_sections = {
                 10+1.27, 77.46+1.27, 100-20-2*1.27, 1.27, 1;
                 90, 77.46+1.27, 10, 1.27, 2;                
             ]
-            }
+            };
 
 diaphragms = [0, 400, 800, 1200];
 
@@ -481,7 +481,7 @@ bridge_properties.FOS_webs = material_properties.sigma_buck_webs./bridge_propert
 figure
 hold on
 plot(x, SFD, 'r')
-plot(x, -SFD, 'r')
+%plot(x, -SFD, 'r')
 plot(x, zeros(1, n+1), 'k')
 
 title("Shear Force Envelope")
@@ -494,7 +494,7 @@ hold on
 % invert the y axis so that positive bending moments are plotted downwards
 set(gca, 'YDir','reverse')
 plot(x, BMD, 'b')
-plot(x, -BMD, 'b')
+%plot(x, -BMD, 'b')
 plot(x, zeros(1, n+1), 'k')
 
 
