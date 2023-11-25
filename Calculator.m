@@ -560,40 +560,81 @@ legend('Bending Moment')
 %% 8. Vfail and Mfail
 
 % Failure Mode 1: Flexural Tensile Failure of Walls
-bridge_properties.P_flex_tens = material_properties.sigma_tens./bridge_properties.sigma_bot;
+bridge_properties.P_flex_tens = abs(material_properties.sigma_tens./bridge_properties.sigma_bot);
 % Failure Mode 2: Flexural Compressive Failure of Walls
-bridge_properties.P_flex_comp = material_properties.sigma_comp./bridge_properties.sigma_top;
+bridge_properties.P_flex_comp = abs(material_properties.sigma_comp./bridge_properties.sigma_top);
 % Failure Mode 3: Shear Failure of Walls
-bridge_properties.P_shear = material_properties.tau_max./bridge_properties.tau_xy;
+bridge_properties.P_shear = abs(material_properties.tau_max./bridge_properties.tau_xy);
 % Failure Mode 4: Glue Shear Failure
-bridge_properties.P_glue = material_properties.tau_gmax./bridge_properties.tau_g;
+bridge_properties.P_glue = abs(material_properties.tau_gmax./bridge_properties.tau_g);
 % Failure Mode 5: Flange Between Webs Buckling Failure
-bridge_properties.P_flange_webs = material_properties.sigma_buck_flange_webs./bridge_properties.sigma_top;
+bridge_properties.P_flange_webs = abs(material_properties.sigma_buck_flange_webs./bridge_properties.sigma_top);
 % Failure Mode 6: Flange Tips Buckling Failure
-bridge_properties.P_flange_tips = material_properties.sigma_buck_flange_tips./bridge_properties.sigma_top;
+bridge_properties.P_flange_tips = abs(material_properties.sigma_buck_flange_tips./bridge_properties.sigma_top);
 % Failure Mode 7: Webs Buckling Failure
-bridge_properties.P_webs = material_properties.sigma_buck_webs./bridge_properties.sigma_top;
+bridge_properties.P_webs = abs(material_properties.sigma_buck_webs./bridge_properties.sigma_top);
 % Failure Mode 8: Webs Shear Buckling Failure
-bridge_properties.P_webs_shear = material_properties.tau_buck_webs./bridge_properties.tau_xy;
+bridge_properties.P_webs_shear = abs(material_properties.tau_buck_webs./bridge_properties.tau_xy);
 
-%% plot all the failure loads
+%% finding minimum failure load for each failure mode
+minP = array2table(zeros(1, 9), 'VariableNames', ["minP_flex_tens", "minP_flex_comp", "minP_shear", "minP_glue", "minP_flange_webs", "minP_flange_tips", "minP_webs", "minP_webs_shear", "overall_minP"]);
+minP.minP_flex_tens = min(bridge_properties.P_flex_tens);
+minP.minP_flex_comp = min(bridge_properties.P_flex_comp);
+minP.minP_shear = min(bridge_properties.P_shear);
+minP.minP_glue = min(bridge_properties.P_glue);
+minP.minP_flange_webs = min(bridge_properties.P_flange_webs);
+minP.minP_flange_tips = min(bridge_properties.P_flange_tips);
+minP.minP_webs = min(bridge_properties.P_webs);
+minP.minP_webs_shear = min(bridge_properties.P_webs_shear);
+minP.overall_minP = min([minP.minP_flex_tens, minP.minP_flex_comp, minP.minP_shear, minP.minP_glue, minP.minP_flange_webs, minP.minP_flange_tips, minP.minP_webs, minP.minP_webs_shear]);
+%% plot all the failure loads and mark the minimum failure load as an x
 figure
 hold on
-plot(x, bridge_properties.P_flex_tens.', 'r')
-plot(x, bridge_properties.P_flex_comp.', 'b')
-plot(x, abs(bridge_properties.P_shear.'), 'g')
-plot(x, abs(bridge_properties.P_glue.'), 'm')
-plot(x, bridge_properties.P_flange_webs.', 'c')
-plot(x, bridge_properties.P_flange_tips.', 'y')
-plot(x, bridge_properties.P_webs.', 'k')
-plot(x, bridge_properties.P_webs_shear.', 'k--')
+a = plot(x, bridge_properties.P_flex_tens.', "r-");
+% mark the minimum failure load
+plot(x(bridge_properties.P_flex_tens == minP.minP_flex_tens), minP.minP_flex_tens, 'rx')
+% label the minimum failure load
+text(x(bridge_properties.P_flex_tens == minP.minP_flex_tens), minP.minP_flex_tens, num2str(minP.minP_flex_tens))
+
+b = plot(x, bridge_properties.P_flex_comp.', "g-");
+plot(x(bridge_properties.P_flex_comp == minP.minP_flex_comp), minP.minP_flex_comp, 'rx')
+text(x(bridge_properties.P_flex_comp == minP.minP_flex_comp), minP.minP_flex_comp, num2str(minP.minP_flex_comp))    
+
+c = plot(x, abs(bridge_properties.P_shear.'), "r:");
+plot(x(bridge_properties.P_shear == minP.minP_shear), minP.minP_shear, 'rx')
+text(x(bridge_properties.P_shear == minP.minP_shear), minP.minP_shear, num2str(minP.minP_shear))
+
+d = plot(x, abs(bridge_properties.P_glue.'), "g:");
+plot(x(bridge_properties.P_glue == minP.minP_glue), minP.minP_glue, 'rx')
+text(x(bridge_properties.P_glue == minP.minP_glue), minP.minP_glue, num2str(minP.minP_glue))
+
+e = plot(x, bridge_properties.P_flange_webs.', "r-.");
+plot(x(bridge_properties.P_flange_webs == minP.minP_flange_webs), minP.minP_flange_webs, 'rx')
+text(x(bridge_properties.P_flange_webs == minP.minP_flange_webs), minP.minP_flange_webs, num2str(minP.minP_flange_webs))
+
+f = plot(x, bridge_properties.P_flange_tips.', "g-.");
+plot(x(bridge_properties.P_flange_tips == minP.minP_flange_tips), minP.minP_flange_tips, 'rx')
+text(x(bridge_properties.P_flange_tips == minP.minP_flange_tips), minP.minP_flange_tips, num2str(minP.minP_flange_tips))
+
+g = plot(x, bridge_properties.P_webs.', "b-.");
+plot(x(bridge_properties.P_webs == minP.minP_webs), minP.minP_webs, 'rx')
+text(x(bridge_properties.P_webs == minP.minP_webs), minP.minP_webs, num2str(minP.minP_webs))
+
+h = plot(x, bridge_properties.P_webs_shear.', "b:");
+plot(x(bridge_properties.P_webs_shear == minP.minP_webs_shear), minP.minP_webs_shear, 'rx')
+text(x(bridge_properties.P_webs_shear == minP.minP_webs_shear), minP.minP_webs_shear, num2str(minP.minP_webs_shear))
+
+% plot the overall minimum failure load
+i = plot(x, ones(1, n+1)*minP.overall_minP, 'k--');
+% label the overall minimum failure load
+text(x(1), minP.overall_minP, num2str(minP.overall_minP))
 
 plot(x, zeros(1, n+1), "k")
 
 title("Failure Loads")
 xlabel("Location on Bridge (mm)")
 ylabel("Failure Load (N)")
-legend("Flexural Tensile Failure of Walls", "Flexural Compressive Failure of Walls", "Shear Failure of Walls", "Glue Shear Failure", "Flange Between Webs Buckling Failure", "Flange Tips Buckling Failure", "Webs Buckling Failure", "Webs Shear Buckling Failure")
+legend([a, b, c, d, e, f, g, h, i], "Flexural Tensile Failure of Walls", "Flexural Compressive Failure of Walls", "Shear Failure of Walls", "Glue Shear Failure", "Flange Between Webs Buckling Failure", "Flange Tips Buckling Failure", "Webs Buckling Failure", "Webs Shear Buckling Failure", "Minimum Failure Load")
 
 % only display failure loads up to 2000 N
 ylim([0, 2000])
