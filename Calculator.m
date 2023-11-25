@@ -175,15 +175,23 @@ for i = 1:length(x_change)
         end
     end
 
+    % plot the x axis up to the width of the cross section
+    % find the width of the cross section
+    width = max(x_section(:,1) + x_section(:,3));
+
     % plot the x axis
-    plot([0, 100], [0, 0], 'k', 'LineWidth', 2)
+    plot([0, width], [0, 0], 'k', 'LineWidth', 2)
 
     % plot the y axis
-    plot([0, 0], [0, 100], 'k', 'LineWidth', 2)
+    % find the height of the cross section
+    height = max(x_section(:,2) + x_section(:,4));
+
+    % plot the y axis
+    plot([0, 0], [0, height], 'k', 'LineWidth', 2)
 
     % set the axis limits
-    xlim([0, 100])
-    ylim([0, 100])
+    xlim([0, width])
+    ylim([0, height])
 
     % label the axes
     xlabel('x (mm)')
@@ -286,20 +294,21 @@ for i = 1:length(x_change)
     % check if the glue is horizontal or vertical
     % assuming that all glue for a given cross section is either all horizontal or all vertical
     if ~isempty(glue)
-        b = 0; % width of the glue
+        bg = 0; % width of the glue
         if glue(1, 1) == 0
-            % if the glue is horizontal, find the width of the glue
-            % find the subsections that are within the glue
-            x_section_glue = x_section(x_section.x >= glue(1,2) & x_section.x <= glue(1,2) + glue(1,4), :);
+            % only calculate the glue if calculate is 1
+                % if the glue is horizontal, find the width of the glue
+                % find the subsections that are within the glue
+                x_section_glue = x_section(x_section.x >= glue(1,2) & x_section.x <= glue(1,2) + glue(1,4), :);
 
-            % find the width of the glue
-            b = sum(x_section_glue.dx);
+                % find the width of the glue
+                bg = sum(glue(:,4));
 
-            % find the centroidal axis of the glue
-            ybar_glue = sum(x_section_glue.area.*x_section_glue.ybar)/sum(x_section_glue.area);
+                % find the centroidal axis of the glue
+                ybar_glue = sum(x_section_glue.area.*x_section_glue.ybar)/sum(x_section_glue.area);
 
-            % find Q at the glue location
-            Qglue(i) = sum(x_section_glue.area.*(ybar(i) - ybar_glue));
+                % find Q at the glue location
+                Qglue(i) = sum(x_section_glue.area.*(ybar(i) - ybar_glue));
         end
         
     end
