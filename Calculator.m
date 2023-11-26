@@ -81,7 +81,7 @@ BMD = max(BMDi); % BMD envelope
 % SFD is red
 % BMD is blue
 figure
-hold on
+hold on; grid on; grid minor;
 plot(x, SFD, 'r')
 %plot(x, -SFD, 'r')
 plot(x, zeros(1, n+1), 'k')
@@ -92,7 +92,7 @@ ylabel("Shear Force (N)")
 legend('Shear Force')
 
 figure
-hold on
+hold on; grid on; grid minor;
 % invert the y axis so that positive bending moments are plotted downwards
 set(gca, 'YDir','reverse')
 plot(x, BMD, 'b')
@@ -105,6 +105,7 @@ ylabel("Bending Moment (N*mm)")
 legend('Bending Moment')
 
 %% 2. Define Cross Section
+%% 2.1 Define Individual Cross Sections
 % x_sections is stored as a dictionary with the keys being the x location along the bridge and the values being the cross section at that location
 % each cross section is stored as an array of subsections with the following values:
 % [x, y, dx, dy, lc, id; ...]
@@ -131,7 +132,7 @@ legend('Bending Moment')
 % location of the diaphragms along the bridge
 % diaphragms = [0, 400, 800, 1200];
 
-%% Glue
+%% 2.2 Define Glue
 % The locations of the glue are stored as a dictionary with the keys being the x location along the bridge and the values being the locations of the glue
 % each glue location is stored as an array of subsections with the following values:
 % [dir, x, y, length/width, calculate; ...]
@@ -148,7 +149,7 @@ legend('Bending Moment')
 % x_section_params = dictionary(x_change, x_sections); % dictionary of the cross sections
 % glue_params = dictionary(x_change, glue_locations); % dictionary of the glue locations
 
-%% Design 0
+%% 2.3 Design 0
 x_change = [0]; % x locations of cross section changes
 x_sections = {[10+1.27, 0, 80-2*1.27, 1.27, 0, 0; % bottom flange
                10, 0, 1.27, 75+1.27, 3, 0; % left web
@@ -163,68 +164,6 @@ glue_locations = {[0, 10, 75, 1.27 + 5, 1;
                    0, 10 + 80 - 5 - 1.27, 75, 1.27 + 5, 1]};
 x_section_params = dictionary(x_change, x_sections); % dictionary of the cross sections
 glue_params = dictionary(x_change, glue_locations); % dictionary of the glue locations
-
-%% 2.2 Plotting the Cross Sections
-for i = 1:length(x_change)
-    % find the cross section
-    x_section = x_section_params(x_change(i));
-    x_section = x_section{1, 1};
-
-    % find the glue locations
-    glue = glue_params(x_change(i));
-    glue = glue{1, 1};
-
-    % plot the cross section
-    figure
-    hold on
-    for j = 1:size(x_section,1)
-        % determine the color of the subsection based on the load case
-        if x_section(j,5) == 0
-            color = 'k';
-        elseif x_section(j,5) == 1
-            color = 'b';
-        elseif x_section(j,5) == 2
-            color = 'r';
-        elseif x_section(j,5) == 3
-            color = 'g';
-        end
-        rectangle('Position', [x_section(j,1), x_section(j,2), x_section(j,3), x_section(j,4)], 'FaceColor', color)
-    end
-
-    % plot the glue
-    for j = 1:size(glue,1)
-        if glue(j,1) == 0
-            rectangle('Position', [glue(j,2), glue(j,3) - 0.05, glue(j,4), 0.1], 'FaceColor', 'y')
-        else
-            rectangle('Position', [glue(j,2) - 0.05, glue(j,3), 0.1, glue(j,4)], 'FaceColor', 'y')
-        end
-    end
-
-    % plot the x axis up to the width of the cross section
-    % find the width of the cross section
-    width = max(x_section(:,1) + x_section(:,3));
-
-    % plot the x axis
-    plot([0, width], [0, 0], 'k', 'LineWidth', 2)
-
-    % plot the y axis
-    % find the height of the cross section
-    height = max(x_section(:,2) + x_section(:,4));
-
-    % plot the y axis
-    plot([0, 0], [0, height], 'k', 'LineWidth', 2)
-
-    % set the axis limits
-    xlim([0, width])
-    ylim([0, height])
-
-    % label the axes
-    xlabel('x (mm)')
-    ylabel('y (mm)')
-
-    % title the figure
-    title(['Cross Section at x = ', num2str(x_change(i)), ' mm'])
-end
 
 %% 3. Calculate Sectional Properties
 %% 3.1 Setup arrays to store the sectional properties
@@ -267,9 +206,6 @@ for i = 1:length(x_change)
 
     % find the centroidal axis
     ybar(i) = sum(x_section.area.*x_section.ybar)/A(i);
-
-    % DEBUG add the ybar to the figure
-    plot([0, 100], [ybar(i), ybar(i)], 'k', 'LineWidth', 2)
 
     % find the bottom of the cross section
     ybot(i) = min(x_section.y);
@@ -369,6 +305,71 @@ disp("Matboard needed: " + matboard + " mm^3")
 %% 3.5 Calculate the amount of glue needed
 glue_needed = sum(bridge_properties.gL);
 disp("Glue needed: " + glue_needed + " mm^2")
+
+%% 3.6 Plotting the Cross Sections
+for i = 1:length(x_change)
+    % find the cross section
+    x_section = x_section_params(x_change(i));
+    x_section = x_section{1, 1};
+
+    % find the glue locations
+    glue = glue_params(x_change(i));
+    glue = glue{1, 1};
+
+    % plot the cross section
+    figure
+    hold on; grid on; grid minor;
+    for j = 1:size(x_section,1)
+        % determine the color of the subsection based on the load case
+        if x_section(j,5) == 0
+            color = 'k';
+        elseif x_section(j,5) == 1
+            color = 'b';
+        elseif x_section(j,5) == 2
+            color = 'r';
+        elseif x_section(j,5) == 3
+            color = 'g';
+        end
+        rectangle('Position', [x_section(j,1), x_section(j,2), x_section(j,3), x_section(j,4)], 'FaceColor', color)
+    end
+
+    % plot the glue
+    for j = 1:size(glue,1)
+        if glue(j,1) == 0
+            rectangle('Position', [glue(j,2), glue(j,3) - 0.05, glue(j,4), 0.1], 'FaceColor', 'y')
+        else
+            rectangle('Position', [glue(j,2) - 0.05, glue(j,3), 0.1, glue(j,4)], 'FaceColor', 'y')
+        end
+    end
+
+    % plot the centroidal axis
+    plot([0, max(x_section(:,1) + x_section(:,3))], [bridge_properties.ybar(bridge_properties.x == x_change(i)), bridge_properties.ybar(bridge_properties.x == x_change(i))], 'k--', 'LineWidth', 2, "DisplayName", "Centroidal Axis")
+
+    % plot the x axis up to the width of the cross section
+    % find the width of the cross section
+    width = max(x_section(:,1) + x_section(:,3));
+
+    % plot the x axis
+    plot([0, width], [0, 0], 'k', 'LineWidth', 2)
+
+    % plot the y axis
+    % find the height of the cross section
+    height = max(x_section(:,2) + x_section(:,4));
+
+    % plot the y axis
+    plot([0, 0], [0, height], 'k', 'LineWidth', 2)
+
+    % set the axis limits
+    xlim([0, width])
+    ylim([0, height])
+
+    % label the axes
+    xlabel('x (mm)')
+    ylabel('y (mm)')
+
+    % title the figure
+    title(['Cross Section at x = ', sigfig(x_change(i)), ' mm'])
+end
 
 %% 4. Calculate Applied Stress
 % stress at the top across the entire bridge
@@ -550,46 +551,123 @@ min_FOSs.min_FOS_webs_shear = min(bridge_properties.FOS_webs_shear);
 min_FOSs.overall_min_FOS = min([min_FOSs.min_FOS_tens, min_FOSs.min_FOS_comp, min_FOSs.min_FOS_shear, min_FOSs.min_FOS_glue, min_FOSs.min_FOS_flange_webs, min_FOSs.min_FOS_flange_tips, min_FOSs.min_FOS_webs, min_FOSs.min_FOS_webs_shear]);
 disp(min_FOSs)
 
-%% 6.3 Plotting the FOSs
+%% 6.3 Plotting the FOSs on separate graphs
 figure
-hold on
+subplot(2, 3, 1)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.FOS_shear, 'r:')
+title("Shear Failure of Walls")
+xlabel("Location on Bridge (mm)")
+ylabel("Factor of Safety")
+plot(x(bridge_properties.FOS_shear == min_FOSs.min_FOS_shear), min_FOSs.min_FOS_shear, 'rx')
+text(x(bridge_properties.FOS_shear == min_FOSs.min_FOS_shear), min_FOSs.min_FOS_shear, sigfig(min_FOSs.min_FOS_shear))
+legend("FOS", "Minimum FOS")
+% change the limits to not include excessively high FOSs
+ylim([0, max([min_FOSs.min_FOS_shear])*5])
+
+subplot(2, 3, 2)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.FOS_glue, 'g:')
+title("Glue Shear Failure")
+xlabel("Location on Bridge (mm)")
+ylabel("Factor of Safety")
+plot(x(bridge_properties.FOS_glue == min_FOSs.min_FOS_glue), min_FOSs.min_FOS_glue, 'rx')
+text(x(bridge_properties.FOS_glue == min_FOSs.min_FOS_glue), min_FOSs.min_FOS_glue, sigfig(min_FOSs.min_FOS_glue))
+legend("FOS", "Minimum FOS")
+ylim([0, max([min_FOSs.min_FOS_glue])*5])
+
+subplot(2, 3, 3)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.FOS_webs_shear, 'b:')
+title("Webs Buckling Failure")
+xlabel("Location on Bridge (mm)")
+ylabel("Factor of Safety")
+plot(x(bridge_properties.FOS_webs_shear == min_FOSs.min_FOS_webs_shear), min_FOSs.min_FOS_webs_shear, 'rx')
+text(x(bridge_properties.FOS_webs_shear == min_FOSs.min_FOS_webs_shear), min_FOSs.min_FOS_webs_shear, sigfig(min_FOSs.min_FOS_webs_shear))
+legend("FOS", "Minimum FOS")
+ylim([0, max([min_FOSs.min_FOS_webs_shear])*5])
+
+subplot(2, 3, 4)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.FOS_tens, 'r')
+plot(x, bridge_properties.FOS_comp, 'g')
+title("Flexural Failure of Walls")
+xlabel("Location on Bridge (mm)")
+ylabel("Factor of Safety")
+plot(x(bridge_properties.FOS_tens == min_FOSs.min_FOS_tens), min_FOSs.min_FOS_tens, 'rx')
+text(x(bridge_properties.FOS_tens == min_FOSs.min_FOS_tens), min_FOSs.min_FOS_tens, sigfig(min_FOSs.min_FOS_tens))
+plot(x(bridge_properties.FOS_comp == min_FOSs.min_FOS_comp), min_FOSs.min_FOS_comp, 'rx')
+text(x(bridge_properties.FOS_comp == min_FOSs.min_FOS_comp), min_FOSs.min_FOS_comp, sigfig(min_FOSs.min_FOS_comp))
+legend("FOS Against Flexture Tensile Failure of Walls", "FOS Against Flexural Compressive Failure of Walls", "Minimum FOS", "")
+ylim([0, max([min_FOSs.min_FOS_tens, min_FOSs.min_FOS_comp])*5])
+
+subplot(2, 3, 5)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.FOS_flange_webs, 'r-.')
+plot(x, bridge_properties.FOS_flange_tips, 'g-.')
+title("Flange Buckling Failure")
+xlabel("Location on Bridge (mm)")
+ylabel("Factor of Safety")
+plot(x(bridge_properties.FOS_flange_webs == min_FOSs.min_FOS_flange_webs), min_FOSs.min_FOS_flange_webs, 'rx')
+text(x(bridge_properties.FOS_flange_webs == min_FOSs.min_FOS_flange_webs), min_FOSs.min_FOS_flange_webs, sigfig(min_FOSs.min_FOS_flange_webs))
+plot(x(bridge_properties.FOS_flange_tips == min_FOSs.min_FOS_flange_tips), min_FOSs.min_FOS_flange_tips, 'rx')
+text(x(bridge_properties.FOS_flange_tips == min_FOSs.min_FOS_flange_tips), min_FOSs.min_FOS_flange_tips, sigfig(min_FOSs.min_FOS_flange_tips))
+legend("FOS Against Flange Between Webs Buckling Failure", "FOS Against Flange Tips Buckling Failure", "Minimum FOS", "")
+ylim([0, max([min_FOSs.min_FOS_flange_webs, min_FOSs.min_FOS_flange_tips])*5])
+
+subplot(2, 3, 6)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.FOS_webs, 'b-.')
+title("Webs Buckling Failure")
+xlabel("Location on Bridge (mm)")
+ylabel("Factor of Safety")
+plot(x(bridge_properties.FOS_webs == min_FOSs.min_FOS_webs), min_FOSs.min_FOS_webs, 'rx')
+text(x(bridge_properties.FOS_webs == min_FOSs.min_FOS_webs), min_FOSs.min_FOS_webs, sigfig(min_FOSs.min_FOS_webs))
+legend("FOS", "Minimum FOS")
+ylim([0, max([min_FOSs.min_FOS_webs])*5])
+
+sgtitle("Factors of Safety")
+
+%% 6.4 Plotting the FOSs on the same graph
+figure
+hold on; grid on; grid minor;
 fos1 = plot(x, bridge_properties.FOS_tens.', 'r-');
 % display the minimum FOS as an x
 plot(x(bridge_properties.FOS_tens == min_FOSs.min_FOS_tens), min_FOSs.min_FOS_tens, 'rx')
 % label the minimum FOS
-text(x(bridge_properties.FOS_tens == min_FOSs.min_FOS_tens), min_FOSs.min_FOS_tens, num2str(min_FOSs.min_FOS_tens))
+text(x(bridge_properties.FOS_tens == min_FOSs.min_FOS_tens), min_FOSs.min_FOS_tens, sigfig(min_FOSs.min_FOS_tens))
 
 fos2 = plot(x, bridge_properties.FOS_comp.', 'g-');
 plot(x(bridge_properties.FOS_comp == min_FOSs.min_FOS_comp), min_FOSs.min_FOS_comp, 'rx')
-text(x(bridge_properties.FOS_comp == min_FOSs.min_FOS_comp), min_FOSs.min_FOS_comp, num2str(min_FOSs.min_FOS_comp))
+text(x(bridge_properties.FOS_comp == min_FOSs.min_FOS_comp), min_FOSs.min_FOS_comp, sigfig(min_FOSs.min_FOS_comp))
 
 fos3 = plot(x, abs(bridge_properties.FOS_shear.'), 'r:');
 plot(x(bridge_properties.FOS_shear == min_FOSs.min_FOS_shear), min_FOSs.min_FOS_shear, 'rx')
-text(x(bridge_properties.FOS_shear == min_FOSs.min_FOS_shear), min_FOSs.min_FOS_shear, num2str(min_FOSs.min_FOS_shear))
+text(x(bridge_properties.FOS_shear == min_FOSs.min_FOS_shear), min_FOSs.min_FOS_shear, sigfig(min_FOSs.min_FOS_shear))
 
 fos4 = plot(x, abs(bridge_properties.FOS_glue.'), 'g:');
 plot(x(bridge_properties.FOS_glue == min_FOSs.min_FOS_glue), min_FOSs.min_FOS_glue, 'rx')
-text(x(bridge_properties.FOS_glue == min_FOSs.min_FOS_glue), min_FOSs.min_FOS_glue, num2str(min_FOSs.min_FOS_glue))
+text(x(bridge_properties.FOS_glue == min_FOSs.min_FOS_glue), min_FOSs.min_FOS_glue, sigfig(min_FOSs.min_FOS_glue))
 
 fos5 = plot(x, bridge_properties.FOS_flange_webs.', 'r-.');
 plot(x(bridge_properties.FOS_flange_webs == min_FOSs.min_FOS_flange_webs), min_FOSs.min_FOS_flange_webs, 'rx')
-text(x(bridge_properties.FOS_flange_webs == min_FOSs.min_FOS_flange_webs), min_FOSs.min_FOS_flange_webs, num2str(min_FOSs.min_FOS_flange_webs))
+text(x(bridge_properties.FOS_flange_webs == min_FOSs.min_FOS_flange_webs), min_FOSs.min_FOS_flange_webs, sigfig(min_FOSs.min_FOS_flange_webs))
 
 fos6 = plot(x, bridge_properties.FOS_flange_tips.', 'g-.');
 plot(x(bridge_properties.FOS_flange_tips == min_FOSs.min_FOS_flange_tips), min_FOSs.min_FOS_flange_tips, 'rx')
-text(x(bridge_properties.FOS_flange_tips == min_FOSs.min_FOS_flange_tips), min_FOSs.min_FOS_flange_tips, num2str(min_FOSs.min_FOS_flange_tips))
+text(x(bridge_properties.FOS_flange_tips == min_FOSs.min_FOS_flange_tips), min_FOSs.min_FOS_flange_tips, sigfig(min_FOSs.min_FOS_flange_tips))
 
 fos7 = plot(x, bridge_properties.FOS_webs.', 'b-.');
 plot(x(bridge_properties.FOS_webs == min_FOSs.min_FOS_webs), min_FOSs.min_FOS_webs, 'rx')
-text(x(bridge_properties.FOS_webs == min_FOSs.min_FOS_webs), min_FOSs.min_FOS_webs, num2str(min_FOSs.min_FOS_webs))
+text(x(bridge_properties.FOS_webs == min_FOSs.min_FOS_webs), min_FOSs.min_FOS_webs, sigfig(min_FOSs.min_FOS_webs))
 
 fos8 = plot(x, abs(bridge_properties.FOS_webs_shear.'), 'b:');
 plot(x(bridge_properties.FOS_webs_shear == min_FOSs.min_FOS_webs_shear), min_FOSs.min_FOS_webs_shear, 'rx')
-text(x(bridge_properties.FOS_webs_shear == min_FOSs.min_FOS_webs_shear), min_FOSs.min_FOS_webs_shear, num2str(min_FOSs.min_FOS_webs_shear))
+text(x(bridge_properties.FOS_webs_shear == min_FOSs.min_FOS_webs_shear), min_FOSs.min_FOS_webs_shear, sigfig(min_FOSs.min_FOS_webs_shear))
 
-% plot the overall minimum FOS
-fos9 = plot(x, min_FOSs.overall_min_FOS*ones(n+1, 1), 'r--');
-text(x(1), min_FOSs.overall_min_FOS, num2str(min_FOSs.overall_min_FOS))
+% plot the minimum FOS line
+fos9 = plot(x, ones(n+1, 1)*min_FOSs.overall_min_FOS, 'r--', 'LineWidth', 2);
+text(x(1), min_FOSs.overall_min_FOS, sigfig(min_FOSs.overall_min_FOS))
 
 % plot the FOS = 1 line
 fos10 = plot(x, ones(n+1, 1), 'k--');
@@ -597,10 +675,9 @@ fos10 = plot(x, ones(n+1, 1), 'k--');
 title("Factors of Safety")
 xlabel("Location on Bridge (mm)")
 ylabel("Factor of Safety")
-legend([fos1, fos2, fos3, fos4, fos5, fos6, fos7, fos8, fos9, fos10], ["Tensile Failure of Walls", "Compressive Failure of Walls", "Shear Failure of Walls", "Glue Shear Failure", "Flange Between Webs Buckling Failure", "Flange Tips Buckling Failure", "Webs Buckling Failure", "Webs Shear Buckling Failure", "Minimum FOS", "FOS = 1"], 'Location', 'best')
+legend([fos1, fos2, fos3, fos4, fos5, fos6, fos7, fos8, fos9, fos10], ["Flexture Tensile Failure of Walls", "Flexural Compressive Failure of Walls", "Shear Failure of Walls", "Glue Shear Failure", "Flange Between Webs Buckling Failure", "Flange Tips Buckling Failure", "Webs Buckling Failure", "Webs Shear Buckling Failure", "Minimum FOS", "FOS = 1"])
 
-% resize to only show FOS up to 10
-ylim([0, 10])
+ylim([0, min_FOSs.overall_min_FOS*10])
 
 %% 7. PFail
 %% 7.1 Calculating using FOS
@@ -634,47 +711,122 @@ minP.minP_webs_shear = min(bridge_properties.P_webs_shear);
 minP.overall_minP = min([minP.minP_flex_tens, minP.minP_flex_comp, minP.minP_shear, minP.minP_glue, minP.minP_flange_webs, minP.minP_flange_tips, minP.minP_webs, minP.minP_webs_shear]);
 disp(minP)
 
-%% 7.3 Plotting Failure Loads
+%% 7.3 Plotting the failure loads on separate graphs
 figure
-hold on
+subplot(2, 3, 1)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.P_shear, 'r:')
+title("Shear Failure of Walls")
+xlabel("Location on Bridge (mm)")
+ylabel("Failure Load (N)")
+plot(x(bridge_properties.P_shear == minP.minP_shear), minP.minP_shear, 'rx')
+text(x(bridge_properties.P_shear == minP.minP_shear), minP.minP_shear, sigfig(minP.minP_shear))
+legend("Failure Load", "Minimum Failure Load")
+ylim([0, max([minP.minP_shear])*5])
+
+subplot(2, 3, 2)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.P_glue, 'g:')
+title("Glue Shear Failure")
+xlabel("Location on Bridge (mm)")
+ylabel("Failure Load (N)")
+plot(x(bridge_properties.P_glue == minP.minP_glue), minP.minP_glue, 'rx')
+text(x(bridge_properties.P_glue == minP.minP_glue), minP.minP_glue, sigfig(minP.minP_glue))
+legend("Failure Load", "Minimum Failure Load")
+ylim([0, max([minP.minP_glue])*5])
+
+subplot(2, 3, 3)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.P_webs_shear, 'b:')
+title("Webs Buckling Failure")
+xlabel("Location on Bridge (mm)")
+ylabel("Failure Load (N)")
+plot(x(bridge_properties.P_webs_shear == minP.minP_webs_shear), minP.minP_webs_shear, 'rx')
+text(x(bridge_properties.P_webs_shear == minP.minP_webs_shear), minP.minP_webs_shear, sigfig(minP.minP_webs_shear))
+legend("Failure Load", "Minimum Failure Load")
+ylim([0, max([minP.minP_webs_shear])*5])
+
+subplot(2, 3, 4)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.P_flex_tens, 'r')
+plot(x, bridge_properties.P_flex_comp, 'g')
+title("Flexural Failure of Walls")
+xlabel("Location on Bridge (mm)")
+ylabel("Failure Load (N)")
+plot(x(bridge_properties.P_flex_tens == minP.minP_flex_tens), minP.minP_flex_tens, 'rx')
+text(x(bridge_properties.P_flex_tens == minP.minP_flex_tens), minP.minP_flex_tens, sigfig(minP.minP_flex_tens))
+plot(x(bridge_properties.P_flex_comp == minP.minP_flex_comp), minP.minP_flex_comp, 'rx')
+text(x(bridge_properties.P_flex_comp == minP.minP_flex_comp), minP.minP_flex_comp, sigfig(minP.minP_flex_comp))
+legend("Flexture Tensile Failure Load of Walls", "Flexural Compressive Failure Load of Walls", "Minimum Failure Load", "")
+ylim([0, max([minP.minP_flex_tens, minP.minP_flex_comp])*5])
+
+subplot(2, 3, 5)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.P_flange_webs, 'r-.')
+plot(x, bridge_properties.P_flange_tips, 'g-.')
+title("Flange Buckling Failure")
+xlabel("Location on Bridge (mm)")
+ylabel("Failure Load (N)")
+plot(x(bridge_properties.P_flange_webs == minP.minP_flange_webs), minP.minP_flange_webs, 'rx')
+text(x(bridge_properties.P_flange_webs == minP.minP_flange_webs), minP.minP_flange_webs, sigfig(minP.minP_flange_webs))
+plot(x(bridge_properties.P_flange_tips == minP.minP_flange_tips), minP.minP_flange_tips, 'rx')
+text(x(bridge_properties.P_flange_tips == minP.minP_flange_tips), minP.minP_flange_tips, sigfig(minP.minP_flange_tips))
+legend("Flange Between Webs Buckling Failure", "Flange Tips Buckling Failure", "Minimum Failure Load", "")
+ylim([0, max([minP.minP_flange_webs, minP.minP_flange_tips])*5])
+
+subplot(2, 3, 6)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.P_webs, 'b-.')
+title("Webs Buckling Failure")
+xlabel("Location on Bridge (mm)")
+ylabel("Failure Load (N)")
+plot(x(bridge_properties.P_webs == minP.minP_webs), minP.minP_webs, 'rx')
+text(x(bridge_properties.P_webs == minP.minP_webs), minP.minP_webs, sigfig(minP.minP_webs))
+legend("Failure Load", "Minimum Failure Load")
+ylim([0, max([minP.minP_webs])*5])
+
+sgtitle("Failure Loads")
+%% 7.4 Plotting Failure Loads on the same graph
+figure
+hold on; grid on; grid minor;
 Pf1 = plot(x, bridge_properties.P_flex_tens.', "r-");
 % mark the minimum failure load
 plot(x(bridge_properties.P_flex_tens == minP.minP_flex_tens), minP.minP_flex_tens, 'rx')
 % label the minimum failure load
-text(x(bridge_properties.P_flex_tens == minP.minP_flex_tens), minP.minP_flex_tens, num2str(minP.minP_flex_tens))
+text(x(bridge_properties.P_flex_tens == minP.minP_flex_tens), minP.minP_flex_tens, sigfig(minP.minP_flex_tens))
 
 Pf2 = plot(x, bridge_properties.P_flex_comp.', "g-");
 plot(x(bridge_properties.P_flex_comp == minP.minP_flex_comp), minP.minP_flex_comp, 'rx')
-text(x(bridge_properties.P_flex_comp == minP.minP_flex_comp), minP.minP_flex_comp, num2str(minP.minP_flex_comp))    
+text(x(bridge_properties.P_flex_comp == minP.minP_flex_comp), minP.minP_flex_comp, sigfig(minP.minP_flex_comp))    
 
 Pf3 = plot(x, abs(bridge_properties.P_shear.'), "r:");
 plot(x(bridge_properties.P_shear == minP.minP_shear), minP.minP_shear, 'rx')
-text(x(bridge_properties.P_shear == minP.minP_shear), minP.minP_shear, num2str(minP.minP_shear))
+text(x(bridge_properties.P_shear == minP.minP_shear), minP.minP_shear, sigfig(minP.minP_shear))
 
 Pf4 = plot(x, abs(bridge_properties.P_glue.'), "g:");
 plot(x(bridge_properties.P_glue == minP.minP_glue), minP.minP_glue, 'rx')
-text(x(bridge_properties.P_glue == minP.minP_glue), minP.minP_glue, num2str(minP.minP_glue))
+text(x(bridge_properties.P_glue == minP.minP_glue), minP.minP_glue, sigfig(minP.minP_glue))
 
 Pf5 = plot(x, bridge_properties.P_flange_webs.', "r-.");
 plot(x(bridge_properties.P_flange_webs == minP.minP_flange_webs), minP.minP_flange_webs, 'rx')
-text(x(bridge_properties.P_flange_webs == minP.minP_flange_webs), minP.minP_flange_webs, num2str(minP.minP_flange_webs))
+text(x(bridge_properties.P_flange_webs == minP.minP_flange_webs), minP.minP_flange_webs, sigfig(minP.minP_flange_webs))
 
 Pf6 = plot(x, bridge_properties.P_flange_tips.', "g-.");
 plot(x(bridge_properties.P_flange_tips == minP.minP_flange_tips), minP.minP_flange_tips, 'rx')
-text(x(bridge_properties.P_flange_tips == minP.minP_flange_tips), minP.minP_flange_tips, num2str(minP.minP_flange_tips))
+text(x(bridge_properties.P_flange_tips == minP.minP_flange_tips), minP.minP_flange_tips, sigfig(minP.minP_flange_tips))
 
 Pf7 = plot(x, bridge_properties.P_webs.', "b-.");
 plot(x(bridge_properties.P_webs == minP.minP_webs), minP.minP_webs, 'rx')
-text(x(bridge_properties.P_webs == minP.minP_webs), minP.minP_webs, num2str(minP.minP_webs))
+text(x(bridge_properties.P_webs == minP.minP_webs), minP.minP_webs, sigfig(minP.minP_webs))
 
 Pf8 = plot(x, bridge_properties.P_webs_shear.', "b:");
 plot(x(bridge_properties.P_webs_shear == minP.minP_webs_shear), minP.minP_webs_shear, 'rx')
-text(x(bridge_properties.P_webs_shear == minP.minP_webs_shear), minP.minP_webs_shear, num2str(minP.minP_webs_shear))
+text(x(bridge_properties.P_webs_shear == minP.minP_webs_shear), minP.minP_webs_shear, sigfig(minP.minP_webs_shear))
 
 % plot the overall minimum failure load
 Pf9 = plot(x, ones(1, n+1)*minP.overall_minP, 'k--');
 % label the overall minimum failure load
-text(x(1), minP.overall_minP, num2str(minP.overall_minP))
+text(x(1), minP.overall_minP, sigfig(minP.overall_minP))
 
 plot(x, zeros(1, n+1), "k")
 
@@ -683,106 +835,131 @@ xlabel("Location on Bridge (mm)")
 ylabel("Failure Load (N)")
 legend([Pf1, Pf2, Pf3, Pf4, Pf5, Pf6, Pf7, Pf8, Pf9], ["Flexural Tensile Failure of Walls", "Flexural Compressive Failure of Walls", "Shear Failure of Walls", "Glue Shear Failure", "Flange Between Webs Buckling Failure", "Flange Tips Buckling Failure", "Webs Buckling Failure", "Webs Shear Buckling Failure", "Minimum Failure Load"], 'Location', 'best')
 
-% only display failure loads up to 2000 N
+ylim([0, minP.overall_minP*10])
+
+%% 8. Bending Moment and Shear Force Capacities
+%% 8.1 Calculate the bending moment and shear force capacities using the minimum FoS for each failure mode
+bridge_properties.M_tens = abs(min_FOSs.min_FOS_tens.*BMD.');
+bridge_properties.M_comp = abs(min_FOSs.min_FOS_comp.*BMD.');
+bridge_properties.V_shear = abs(min_FOSs.min_FOS_shear.*SFD.');
+bridge_properties.V_glue = abs(min_FOSs.min_FOS_glue.*SFD.');
+bridge_properties.M_flange_webs = abs(min_FOSs.min_FOS_flange_webs.*BMD.');
+bridge_properties.M_flange_tips = abs(min_FOSs.min_FOS_flange_tips.*BMD.');
+bridge_properties.M_webs = abs(min_FOSs.min_FOS_webs.*BMD.');
+bridge_properties.V_webs_shear = abs(min_FOSs.min_FOS_webs_shear.*SFD.');
+
+%% 8.2 Plotting the capacities on separate graphs
+figure
+subplot(2, 3, 1)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.V_shear, 'r:')
+title("Shear Capacity of Walls")
+xlabel("Location on Bridge (mm)")
+ylabel("Shear Capacity (N)")
+plot(x, SFD, "k")
+plot(x, -bridge_properties.V_shear, 'r:')
+plot(x, zeros(1, n+1), "k", "LineWidth", 2)
+legend("Shear Force Capacity", "Shear Force Diagram", "", "")
+
+subplot(2, 3, 2)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.V_glue, 'g:')
+title("Glue Shear Capacity")
+xlabel("Location on Bridge (mm)")
+ylabel("Shear Capacity (N)")
+plot(x, SFD, "k")
+plot(x, -bridge_properties.V_glue, 'g:')
+plot(x, zeros(1, n+1), "k", "LineWidth", 2)
+legend("Shear Force Capacity", "Shear Force Diagram", "", "")
+
+subplot(2, 3, 3)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.V_webs_shear, 'b:')
+title("Webs Shear Buckling Capacity")
+xlabel("Location on Bridge (mm)")
+ylabel("Shear Capacity (N)")
+plot(x, SFD, "k")
+plot(x, -bridge_properties.V_webs_shear, 'b:')
+plot(x, zeros(1, n+1), "k", "LineWidth", 2)
+legend("Shear Force Capacity", "Shear Force Diagram", "", "")
+
+subplot(2, 3, 4)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.M_tens, 'r')
+plot(x, bridge_properties.M_comp, 'g')
+title("Flexural Capacity of Walls")
+xlabel("Location on Bridge (mm)")
+ylabel("Bending Moment Capacity (N*mm)")
+plot(x, BMD, "k")
+plot(x, zeros(1, n+1), "k", "LineWidth", 2)
+legend("Flexural Tensile Capacity of Walls", "Flexural Compressive Capacity of Walls", "Bending Moment Diagram", "")
+
+subplot(2, 3, 5)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.M_flange_webs, 'r-.')
+plot(x, bridge_properties.M_flange_tips, 'g-.')
+title("Flange Buckling Capacity")
+xlabel("Location on Bridge (mm)")
+ylabel("Bending Moment Capacity (N*mm)")
+plot(x, BMD, "k")
+plot(x, zeros(1, n+1), "k", "LineWidth", 2)
+legend("Flange Between Webs Buckling Capacity", "Flange Tips Buckling Capacity", "Bending Moment Diagram", "")
+
+subplot(2, 3, 6)
+hold on; grid on; grid minor;
+plot(x, bridge_properties.M_webs, 'b-.')
+title("Webs Buckling Capacity")
+xlabel("Location on Bridge (mm)")
+ylabel("Bending Moment Capacity (N*mm)")
+plot(x, BMD, "k")
+plot(x, zeros(1, n+1), "k", "LineWidth", 2)
+legend("Webs Buckling Capacity", "Bending Moment Diagram", "")
+
+sgtitle("Bending Moment and Shear Force Capacities")
+
+%% 8.3 Plotting the Shear Force Capacilities together
+figure
+hold on; grid on; grid minor;
+Vc1 = plot(x, bridge_properties.V_shear.', "r-");
+
+Vc2 = plot(x, abs(bridge_properties.V_glue.'), "g-");
+
+Vc3 = plot(x, bridge_properties.V_webs_shear.', "b-");
+
+% plot the SFD as a reference
+Vc4 = plot(x, SFD, "k");
+
+title("Shear Force Capacities")
+xlabel("Location on Bridge (mm)")
+ylabel("Shear Force Capacity (N)")
+legend([Vc1, Vc2, Vc3, Vc4], ["Shear Failure of Walls", "Glue Shear Failure", "Webs Shear Buckling Failure", "Shear Force Envelope"], 'Location', 'best')
+
+% only display shear force capacities up to 2000 N
 ylim([0, 2000])
 
-% %% 8. Bending Moment and Shear Force Capacities
-% %% 8.1 Calculate the bending moment and shear force capacities using the FOS and the BMD and SFD
-% bridge_properties.M_tens = abs(bridge_properties.FOS_tens.*BMD.');
-% bridge_properties.M_comp = abs(bridge_properties.FOS_comp.*BMD.');
-% bridge_properties.V_shear = abs(bridge_properties.FOS_shear.*SFD.');
-% bridge_properties.V_glue = abs(bridge_properties.FOS_glue.*SFD.');
-% bridge_properties.M_flange_webs = abs(bridge_properties.FOS_flange_webs.*BMD.');
-% bridge_properties.M_flange_tips = abs(bridge_properties.FOS_flange_tips.*BMD.');
-% bridge_properties.M_webs = abs(bridge_properties.FOS_webs.*BMD.');
-% bridge_properties.V_webs_shear = abs(bridge_properties.FOS_webs_shear.*SFD.');
+%% 8.4 Plotting the Bending Moment Capacilities together
+figure
+hold on; grid on; grid minor;
+Mc1 = plot(x, bridge_properties.M_tens.', "r-");
 
-% %% 8.2 Find the minimum bending moment and shear force capacities
-% minM = array2table(zeros(1, 9), 'VariableNames', ["minM_tens", "minM_comp", "minV_shear", "minV_glue", "minM_flange_webs", "minM_flange_tips", "minM_webs", "minV_webs_shear", "overall_minM"]);
-% minM.minM_tens = min(bridge_properties.M_tens);
-% minM.minM_comp = min(bridge_properties.M_comp);
-% minM.minV_shear = min(bridge_properties.V_shear);
-% minM.minV_glue = min(bridge_properties.V_glue);
-% minM.minM_flange_webs = min(bridge_properties.M_flange_webs);
-% minM.minM_flange_tips = min(bridge_properties.M_flange_tips);
-% minM.minM_webs = min(bridge_properties.M_webs);
-% minM.minV_webs_shear = min(bridge_properties.V_webs_shear);
-% minM.overall_minM = min([minM.minM_tens, minM.minM_comp, minM.minV_shear, minM.minV_glue, minM.minM_flange_webs, minM.minM_flange_tips, minM.minM_webs, minM.minV_webs_shear]);
-% disp(minM)
+Mc2 = plot(x, bridge_properties.M_comp.', "g-");
 
-% %% 8.3 Plotting the Shear Force Capacilities
-% figure
-% hold on
-% Vc1 = plot(x, bridge_properties.V_shear.', "r-");
-% % mark the minimum shear force capacity
-% plot(x(bridge_properties.V_shear == minM.minV_shear), minM.minV_shear, 'rx')
-% % label the minimum shear force capacity
-% % text(x(bridge_properties.V_shear == minM.minV_shear), minM.minV_shear, num2str(minM.minV_shear))
+Mc3 = plot(x, bridge_properties.M_flange_webs.', "r-.");
 
-% Vc2 = plot(x, abs(bridge_properties.V_glue.'), "g-");
-% plot(x(bridge_properties.V_glue == minM.minV_glue), minM.minV_glue, 'rx')
-% % text(x(bridge_properties.V_glue == minM.minV_glue), minM.minV_glue, num2str(minM.minV_glue))
+Mc4 = plot(x, bridge_properties.M_flange_tips.', "g-.");
 
-% Vc3 = plot(x, bridge_properties.V_webs_shear.', "b-");
-% plot(x(bridge_properties.V_webs_shear == minM.minV_webs_shear), minM.minV_webs_shear, 'rx')
-% % text(x(bridge_properties.V_webs_shear == minM.minV_webs_shear), minM.minV_webs_shear, num2str(minM.minV_webs_shear))
+Mc5 = plot(x, bridge_properties.M_webs.', "b-.");
 
-% % plot the overall minimum shear force capacity
-% Vc4 = plot(x, ones(1, n+1)*minM.overall_minM, 'k--');
-% % label the overall minimum shear force capacity
-% % text(x(1), minM.overall_minM, num2str(minM.overall_minM))
+% plot the BMD as a reference
+Mc6 = plot(x, BMD, "k");
 
-% % plot the SFD as a reference
-% Vc5 = plot(x, SFD, "k");
+title("Bending Moment Capacities")
+xlabel("Location on Bridge (mm)")
+ylabel("Bending Moment Capacity (N*mm)")
+legend([Mc1, Mc2, Mc3, Mc4, Mc5, Mc6], ["Flexural Tensile Failure of Walls", "Flexural Compressive Failure of Walls", "Flange Between Webs Buckling Failure", "Flange Tips Buckling Failure", "Webs Buckling Failure", "Bending Moment Diagram"], 'Location', 'best')
 
-% title("Shear Force Capacities")
-% xlabel("Location on Bridge (mm)")
-% ylabel("Shear Force Capacity (N)")
-% legend([Vc1, Vc2, Vc3, Vc4, Vc5], ["Shear Failure of Walls", "Glue Shear Failure", "Webs Shear Buckling Failure", "Minimum Shear Force Capacity", "Shear Force Diagram"], 'Location', 'best')
-
-% % only display shear force capacities up to 2000 N
-% ylim([0, 2000])
-
-% %% 8.4 Plotting the Bending Moment Capacilities
-% figure
-% hold on
-% Mc1 = plot(x, bridge_properties.M_tens.', "r-");
-% % % mark the minimum bending moment capacity
-% % plot(x(bridge_properties.M_tens == minM.minM_tens), minM.minM_tens, 'rx')
-% % % label the minimum bending moment capacity
-% % text(x(bridge_properties.M_tens == minM.minM_tens), minM.minM_tens, num2str(minM.minM_tens))
-
-% Mc2 = plot(x, bridge_properties.M_comp.', "g-");
-% % plot(x(bridge_properties.M_comp == minM.minM_comp), minM.minM_comp, 'rx')
-% % text(x(bridge_properties.M_comp == minM.minM_comp), minM.minM_comp, num2str(minM.minM_comp))
-
-% Mc3 = plot(x, bridge_properties.M_flange_webs.', "r-.");
-% % plot(x(bridge_properties.M_flange_webs == minM.minM_flange_webs), minM.minM_flange_webs, 'rx')
-% % text(x(bridge_properties.M_flange_webs == minM.minM_flange_webs), minM.minM_flange_webs, num2str(minM.minM_flange_webs))
-
-% Mc4 = plot(x, bridge_properties.M_flange_tips.', "g-.");
-% % plot(x(bridge_properties.M_flange_tips == minM.minM_flange_tips), minM.minM_flange_tips, 'rx')
-% % text(x(bridge_properties.M_flange_tips == minM.minM_flange_tips), minM.minM_flange_tips, num2str(minM.minM_flange_tips))
-
-% Mc5 = plot(x, bridge_properties.M_webs.', "b-.");
-% % plot(x(bridge_properties.M_webs == minM.minM_webs), minM.minM_webs, 'rx')
-% % text(x(bridge_properties.M_webs == minM.minM_webs), minM.minM_webs, num2str(minM.minM_webs))
-
-% % plot the overall minimum bending moment capacity
-% Mc6 = plot(x, ones(1, n+1)*minM.overall_minM, 'k--');
-% % label the overall minimum bending moment capacity
-% % text(x(1), minM.overall_minM, num2str(minM.overall_minM))
-
-% % plot the BMD as a reference
-% Mc7 = plot(x, BMD, "k");
-
-% title("Bending Moment Capacities")
-% xlabel("Location on Bridge (mm)")
-% ylabel("Bending Moment Capacity (N*mm)")
-% legend([Mc1, Mc2, Mc3, Mc4, Mc5, Mc6, Mc7], ["Flexural Tensile Failure of Walls", "Flexural Compressive Failure of Walls", "Flange Between Webs Buckling Failure", "Flange Tips Buckling Failure", "Webs Buckling Failure", "Minimum Bending Moment Capacity", "Bending Moment Diagram"], 'Location', 'best')
-
-% % only display bending moment capacities up to 10e5 N*mm
-% ylim([0, 10e5])
+% only display bending moment capacities up to 10e5 N*mm
+ylim([0, 10e5])
 
 %% 9. Functions
 %% 9.1 Reaction Solver
@@ -829,4 +1006,29 @@ function [shear, moment] = internal_forces(P, x, cut)
     Mx = P.*(x - cut);
     % sum the moments
     moment = -sum(Mx);
+end
+
+%% 9.3 Significant Figures Formatter
+function output = sigfig(input)
+    % SIGFIG format the input to 3 significant figures if the first digit is not 1, and 4 significant figures if the first digit is 1
+    % input is the number to be formatted as a number
+    % output is the formatted number as a string
+
+    % convert the input to scientific notation
+    input = sprintf("%e", input);
+
+    % convert the input to a character array
+    input = char(input);
+
+    % check if the first digit is 1
+    if input(1) == "1"
+        input = string(input);
+        % format the input to 4 significant figures
+        output = char(sprintf("%.4g", input));
+        
+    else
+        input = string(input);
+        % format the input to 3 significant figures
+        output = char(sprintf("%.3g", input));
+    end
 end
