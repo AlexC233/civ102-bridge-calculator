@@ -161,7 +161,6 @@ x_sections = {[10+1.27, 0, 80-2*1.27, 1.27, 0, 0; % bottom flange
 diaphragms = [0, 400, 800, 1200];
 glue_locations = {[0, 10, 75, 1.27 + 5, 1;
                    0, 10 + 80 - 5 - 1.27, 75, 1.27 + 5, 1]};
-
 x_section_params = dictionary(x_change, x_sections); % dictionary of the cross sections
 glue_params = dictionary(x_change, glue_locations); % dictionary of the glue locations
 
@@ -307,10 +306,12 @@ for i = 1:length(x_change)
     % find Q at the glue location
     % find the glue locations of the cross section that need to be calculated
     glue = glue_params(x_change(i));
-    glue = glue{1, 1}(glue{1, 1}(:,5) == 1, :);
-
+    glue = glue{1, 1};
     % sum the widths of the glue
     gL(i) = sum(glue(:,4));
+
+    % get the glue locations that need to be calculated
+    glue = glue(glue(:,5) == 1, :);
     
     % if there are glue locations, calculate Q at the glue locations
 
