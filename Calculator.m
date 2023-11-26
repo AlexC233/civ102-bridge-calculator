@@ -300,11 +300,11 @@ end
 
 %% 3.4 Calculate the amount of material needed
 matboard = sum(bridge_properties.A);
-disp("Matboard needed: " + matboard + " mm^3")
+disp("Matboard needed: " + sigfig(matboard) + " mm^3")
 
 %% 3.5 Calculate the amount of glue needed
 glue_needed = sum(bridge_properties.gL);
-disp("Glue needed: " + glue_needed + " mm^2")
+disp("Glue needed: " + sigfig(glue_needed) + " mm^2")
 
 %% 3.6 Plotting the Cross Sections
 for i = 1:length(x_change)
@@ -549,7 +549,18 @@ min_FOSs.min_FOS_flange_tips = min(bridge_properties.FOS_flange_tips);
 min_FOSs.min_FOS_webs = min(bridge_properties.FOS_webs);
 min_FOSs.min_FOS_webs_shear = min(bridge_properties.FOS_webs_shear);
 min_FOSs.overall_min_FOS = min([min_FOSs.min_FOS_tens, min_FOSs.min_FOS_comp, min_FOSs.min_FOS_shear, min_FOSs.min_FOS_glue, min_FOSs.min_FOS_flange_webs, min_FOSs.min_FOS_flange_tips, min_FOSs.min_FOS_webs, min_FOSs.min_FOS_webs_shear]);
+disp("Summary of Minimum FOSs (not rounded)")
 disp(min_FOSs)
+% display the minimum FOSs with the correct number of significant figures
+disp("Minimum FOS Against Tensile Failure of Walls: " + sigfig(min_FOSs.min_FOS_tens))
+disp("Minimum FOS Against Compressive Failure of Walls: " + sigfig(min_FOSs.min_FOS_comp))
+disp("Minimum FOS Against Shear Failure of Walls: " + sigfig(min_FOSs.min_FOS_shear))
+disp("Minimum FOS Against Glue Shear Failure: " + sigfig(min_FOSs.min_FOS_glue))
+disp("Minimum FOS Against Flange Between Webs Buckling Failure: " + sigfig(min_FOSs.min_FOS_flange_webs))
+disp("Minimum FOS Against Flange Tips Buckling Failure: " + sigfig(min_FOSs.min_FOS_flange_tips))
+disp("Minimum FOS Against Webs Buckling Failure: " + sigfig(min_FOSs.min_FOS_webs))
+disp("Minimum FOS Against Webs Shear Buckling Failure: " + sigfig(min_FOSs.min_FOS_webs_shear))
+disp("Overall Minimum FOS: " + sigfig(min_FOSs.overall_min_FOS))
 
 %% 6.3 Plotting the FOSs on separate graphs
 figure
@@ -560,7 +571,15 @@ title("Shear Failure of Walls")
 xlabel("Location on Bridge (mm)")
 ylabel("Factor of Safety")
 plot(x(bridge_properties.FOS_shear == min_FOSs.min_FOS_shear), min_FOSs.min_FOS_shear, 'rx')
-text(x(bridge_properties.FOS_shear == min_FOSs.min_FOS_shear), min_FOSs.min_FOS_shear, sigfig(min_FOSs.min_FOS_shear))
+% label the first instance of the minimum FOS
+for i = 1:length(x)
+    if bridge_properties.FOS_shear(i) == min_FOSs.min_FOS_shear
+        text(x(i), min_FOSs.min_FOS_shear, sigfig(min_FOSs.min_FOS_shear))
+        break
+    end
+end
+
+
 legend("FOS", "Minimum FOS")
 % change the limits to not include excessively high FOSs
 ylim([0, max([min_FOSs.min_FOS_shear])*5])
@@ -572,7 +591,12 @@ title("Glue Shear Failure")
 xlabel("Location on Bridge (mm)")
 ylabel("Factor of Safety")
 plot(x(bridge_properties.FOS_glue == min_FOSs.min_FOS_glue), min_FOSs.min_FOS_glue, 'rx')
-text(x(bridge_properties.FOS_glue == min_FOSs.min_FOS_glue), min_FOSs.min_FOS_glue, sigfig(min_FOSs.min_FOS_glue))
+for i = 1:length(x)
+    if bridge_properties.FOS_glue(i) == min_FOSs.min_FOS_glue
+        text(x(i), min_FOSs.min_FOS_glue, sigfig(min_FOSs.min_FOS_glue))
+        break
+    end
+end
 legend("FOS", "Minimum FOS")
 ylim([0, max([min_FOSs.min_FOS_glue])*5])
 
@@ -583,7 +607,12 @@ title("Webs Buckling Failure")
 xlabel("Location on Bridge (mm)")
 ylabel("Factor of Safety")
 plot(x(bridge_properties.FOS_webs_shear == min_FOSs.min_FOS_webs_shear), min_FOSs.min_FOS_webs_shear, 'rx')
-text(x(bridge_properties.FOS_webs_shear == min_FOSs.min_FOS_webs_shear), min_FOSs.min_FOS_webs_shear, sigfig(min_FOSs.min_FOS_webs_shear))
+for i = 1:length(x)
+    if bridge_properties.FOS_webs_shear(i) == min_FOSs.min_FOS_webs_shear
+        text(x(i), min_FOSs.min_FOS_webs_shear, sigfig(min_FOSs.min_FOS_webs_shear))
+        break
+    end
+end
 legend("FOS", "Minimum FOS")
 ylim([0, max([min_FOSs.min_FOS_webs_shear])*5])
 
@@ -595,9 +624,19 @@ title("Flexural Failure of Walls")
 xlabel("Location on Bridge (mm)")
 ylabel("Factor of Safety")
 plot(x(bridge_properties.FOS_tens == min_FOSs.min_FOS_tens), min_FOSs.min_FOS_tens, 'rx')
-text(x(bridge_properties.FOS_tens == min_FOSs.min_FOS_tens), min_FOSs.min_FOS_tens, sigfig(min_FOSs.min_FOS_tens))
+for i = 1:length(x)
+    if bridge_properties.FOS_tens(i) == min_FOSs.min_FOS_tens
+        text(x(i), min_FOSs.min_FOS_tens, sigfig(min_FOSs.min_FOS_tens))
+        break
+    end
+end
 plot(x(bridge_properties.FOS_comp == min_FOSs.min_FOS_comp), min_FOSs.min_FOS_comp, 'rx')
-text(x(bridge_properties.FOS_comp == min_FOSs.min_FOS_comp), min_FOSs.min_FOS_comp, sigfig(min_FOSs.min_FOS_comp))
+for i = 1:length(x)
+    if bridge_properties.FOS_comp(i) == min_FOSs.min_FOS_comp
+        text(x(i), min_FOSs.min_FOS_comp, sigfig(min_FOSs.min_FOS_comp))
+        break
+    end
+end
 legend("FOS Against Flexture Tensile Failure of Walls", "FOS Against Flexural Compressive Failure of Walls", "Minimum FOS", "")
 ylim([0, max([min_FOSs.min_FOS_tens, min_FOSs.min_FOS_comp])*5])
 
@@ -609,9 +648,19 @@ title("Flange Buckling Failure")
 xlabel("Location on Bridge (mm)")
 ylabel("Factor of Safety")
 plot(x(bridge_properties.FOS_flange_webs == min_FOSs.min_FOS_flange_webs), min_FOSs.min_FOS_flange_webs, 'rx')
-text(x(bridge_properties.FOS_flange_webs == min_FOSs.min_FOS_flange_webs), min_FOSs.min_FOS_flange_webs, sigfig(min_FOSs.min_FOS_flange_webs))
+for i = 1:length(x)
+    if bridge_properties.FOS_flange_webs(i) == min_FOSs.min_FOS_flange_webs
+        text(x(i), min_FOSs.min_FOS_flange_webs, sigfig(min_FOSs.min_FOS_flange_webs))
+        break
+    end
+end
 plot(x(bridge_properties.FOS_flange_tips == min_FOSs.min_FOS_flange_tips), min_FOSs.min_FOS_flange_tips, 'rx')
-text(x(bridge_properties.FOS_flange_tips == min_FOSs.min_FOS_flange_tips), min_FOSs.min_FOS_flange_tips, sigfig(min_FOSs.min_FOS_flange_tips))
+for i = 1:length(x)
+    if bridge_properties.FOS_flange_tips(i) == min_FOSs.min_FOS_flange_tips
+        text(x(i), min_FOSs.min_FOS_flange_tips, sigfig(min_FOSs.min_FOS_flange_tips))
+        break
+    end
+end
 legend("FOS Against Flange Between Webs Buckling Failure", "FOS Against Flange Tips Buckling Failure", "Minimum FOS", "")
 ylim([0, max([min_FOSs.min_FOS_flange_webs, min_FOSs.min_FOS_flange_tips])*5])
 
@@ -622,7 +671,12 @@ title("Webs Buckling Failure")
 xlabel("Location on Bridge (mm)")
 ylabel("Factor of Safety")
 plot(x(bridge_properties.FOS_webs == min_FOSs.min_FOS_webs), min_FOSs.min_FOS_webs, 'rx')
-text(x(bridge_properties.FOS_webs == min_FOSs.min_FOS_webs), min_FOSs.min_FOS_webs, sigfig(min_FOSs.min_FOS_webs))
+for i = 1:length(x)
+    if bridge_properties.FOS_webs(i) == min_FOSs.min_FOS_webs
+        text(x(i), min_FOSs.min_FOS_webs, sigfig(min_FOSs.min_FOS_webs))
+        break
+    end
+end
 legend("FOS", "Minimum FOS")
 ylim([0, max([min_FOSs.min_FOS_webs])*5])
 
@@ -635,35 +689,75 @@ fos1 = plot(x, bridge_properties.FOS_tens.', 'r-');
 % display the minimum FOS as an x
 plot(x(bridge_properties.FOS_tens == min_FOSs.min_FOS_tens), min_FOSs.min_FOS_tens, 'rx')
 % label the minimum FOS
-text(x(bridge_properties.FOS_tens == min_FOSs.min_FOS_tens), min_FOSs.min_FOS_tens, sigfig(min_FOSs.min_FOS_tens))
+for i = 1:length(x)
+    if bridge_properties.FOS_tens(i) == min_FOSs.min_FOS_tens
+        text(x(i), min_FOSs.min_FOS_tens, sigfig(min_FOSs.min_FOS_tens))
+        break
+    end
+end
 
 fos2 = plot(x, bridge_properties.FOS_comp.', 'g-');
 plot(x(bridge_properties.FOS_comp == min_FOSs.min_FOS_comp), min_FOSs.min_FOS_comp, 'rx')
-text(x(bridge_properties.FOS_comp == min_FOSs.min_FOS_comp), min_FOSs.min_FOS_comp, sigfig(min_FOSs.min_FOS_comp))
+for i = 1:length(x)
+    if bridge_properties.FOS_comp(i) == min_FOSs.min_FOS_comp
+        text(x(i), min_FOSs.min_FOS_comp, sigfig(min_FOSs.min_FOS_comp))
+        break
+    end
+end
 
 fos3 = plot(x, abs(bridge_properties.FOS_shear.'), 'r:');
 plot(x(bridge_properties.FOS_shear == min_FOSs.min_FOS_shear), min_FOSs.min_FOS_shear, 'rx')
-text(x(bridge_properties.FOS_shear == min_FOSs.min_FOS_shear), min_FOSs.min_FOS_shear, sigfig(min_FOSs.min_FOS_shear))
+for i = 1:length(x)
+    if bridge_properties.FOS_shear(i) == min_FOSs.min_FOS_shear
+        text(x(i), min_FOSs.min_FOS_shear, sigfig(min_FOSs.min_FOS_shear))
+        break
+    end
+end
 
 fos4 = plot(x, abs(bridge_properties.FOS_glue.'), 'g:');
 plot(x(bridge_properties.FOS_glue == min_FOSs.min_FOS_glue), min_FOSs.min_FOS_glue, 'rx')
-text(x(bridge_properties.FOS_glue == min_FOSs.min_FOS_glue), min_FOSs.min_FOS_glue, sigfig(min_FOSs.min_FOS_glue))
+for i = 1:length(x)
+    if bridge_properties.FOS_glue(i) == min_FOSs.min_FOS_glue
+        text(x(i), min_FOSs.min_FOS_glue, sigfig(min_FOSs.min_FOS_glue))
+        break
+    end
+end
 
 fos5 = plot(x, bridge_properties.FOS_flange_webs.', 'r-.');
 plot(x(bridge_properties.FOS_flange_webs == min_FOSs.min_FOS_flange_webs), min_FOSs.min_FOS_flange_webs, 'rx')
-text(x(bridge_properties.FOS_flange_webs == min_FOSs.min_FOS_flange_webs), min_FOSs.min_FOS_flange_webs, sigfig(min_FOSs.min_FOS_flange_webs))
+for i = 1:length(x)
+    if bridge_properties.FOS_flange_webs(i) == min_FOSs.min_FOS_flange_webs
+        text(x(i), min_FOSs.min_FOS_flange_webs, sigfig(min_FOSs.min_FOS_flange_webs))
+        break
+    end
+end
 
 fos6 = plot(x, bridge_properties.FOS_flange_tips.', 'g-.');
 plot(x(bridge_properties.FOS_flange_tips == min_FOSs.min_FOS_flange_tips), min_FOSs.min_FOS_flange_tips, 'rx')
-text(x(bridge_properties.FOS_flange_tips == min_FOSs.min_FOS_flange_tips), min_FOSs.min_FOS_flange_tips, sigfig(min_FOSs.min_FOS_flange_tips))
+for i = 1:length(x)
+    if bridge_properties.FOS_flange_tips(i) == min_FOSs.min_FOS_flange_tips
+        text(x(i), min_FOSs.min_FOS_flange_tips, sigfig(min_FOSs.min_FOS_flange_tips))
+        break
+    end
+end
 
 fos7 = plot(x, bridge_properties.FOS_webs.', 'b-.');
 plot(x(bridge_properties.FOS_webs == min_FOSs.min_FOS_webs), min_FOSs.min_FOS_webs, 'rx')
-text(x(bridge_properties.FOS_webs == min_FOSs.min_FOS_webs), min_FOSs.min_FOS_webs, sigfig(min_FOSs.min_FOS_webs))
+for i = 1:length(x)
+    if bridge_properties.FOS_webs(i) == min_FOSs.min_FOS_webs
+        text(x(i), min_FOSs.min_FOS_webs, sigfig(min_FOSs.min_FOS_webs))
+        break
+    end
+end
 
 fos8 = plot(x, abs(bridge_properties.FOS_webs_shear.'), 'b:');
 plot(x(bridge_properties.FOS_webs_shear == min_FOSs.min_FOS_webs_shear), min_FOSs.min_FOS_webs_shear, 'rx')
-text(x(bridge_properties.FOS_webs_shear == min_FOSs.min_FOS_webs_shear), min_FOSs.min_FOS_webs_shear, sigfig(min_FOSs.min_FOS_webs_shear))
+for i = 1:length(x)
+    if bridge_properties.FOS_webs_shear(i) == min_FOSs.min_FOS_webs_shear
+        text(x(i), min_FOSs.min_FOS_webs_shear, sigfig(min_FOSs.min_FOS_webs_shear))
+        break
+    end
+end
 
 % plot the minimum FOS line
 fos9 = plot(x, ones(n+1, 1)*min_FOSs.overall_min_FOS, 'r--', 'LineWidth', 2);
@@ -709,7 +803,19 @@ minP.minP_flange_tips = min(bridge_properties.P_flange_tips);
 minP.minP_webs = min(bridge_properties.P_webs);
 minP.minP_webs_shear = min(bridge_properties.P_webs_shear);
 minP.overall_minP = min([minP.minP_flex_tens, minP.minP_flex_comp, minP.minP_shear, minP.minP_glue, minP.minP_flange_webs, minP.minP_flange_tips, minP.minP_webs, minP.minP_webs_shear]);
+disp("All values are in Newtons")
+disp("Summary of Minimum Failure Loads (not rounded)")
 disp(minP)
+% display the minimum failure loads with the correct number of significant figures
+disp("Minimum Failure Load Against Tensile Failure of Walls: " + sigfig(minP.minP_flex_tens))
+disp("Minimum Failure Load Against Compressive Failure of Walls: " + sigfig(minP.minP_flex_comp))
+disp("Minimum Failure Load Against Shear Failure of Walls: " + sigfig(minP.minP_shear))
+disp("Minimum Failure Load Against Glue Shear Failure: " + sigfig(minP.minP_glue))
+disp("Minimum Failure Load Against Flange Between Webs Buckling Failure: " + sigfig(minP.minP_flange_webs))
+disp("Minimum Failure Load Against Flange Tips Buckling Failure: " + sigfig(minP.minP_flange_tips))
+disp("Minimum Failure Load Against Webs Buckling Failure: " + sigfig(minP.minP_webs))
+disp("Minimum Failure Load Against Webs Shear Buckling Failure: " + sigfig(minP.minP_webs_shear))
+disp("Overall Minimum Failure Load: " + sigfig(minP.overall_minP))
 
 %% 7.3 Plotting the failure loads on separate graphs
 figure
@@ -720,7 +826,12 @@ title("Shear Failure of Walls")
 xlabel("Location on Bridge (mm)")
 ylabel("Failure Load (N)")
 plot(x(bridge_properties.P_shear == minP.minP_shear), minP.minP_shear, 'rx')
-text(x(bridge_properties.P_shear == minP.minP_shear), minP.minP_shear, sigfig(minP.minP_shear))
+for i = 1:length(x)
+    if bridge_properties.P_shear(i) == minP.minP_shear
+        text(x(i), minP.minP_shear, sigfig(minP.minP_shear))
+        break
+    end
+end
 legend("Failure Load", "Minimum Failure Load")
 ylim([0, max([minP.minP_shear])*5])
 
@@ -731,7 +842,12 @@ title("Glue Shear Failure")
 xlabel("Location on Bridge (mm)")
 ylabel("Failure Load (N)")
 plot(x(bridge_properties.P_glue == minP.minP_glue), minP.minP_glue, 'rx')
-text(x(bridge_properties.P_glue == minP.minP_glue), minP.minP_glue, sigfig(minP.minP_glue))
+for i = 1:length(x)
+    if bridge_properties.P_glue(i) == minP.minP_glue
+        text(x(i), minP.minP_glue, sigfig(minP.minP_glue))
+        break
+    end
+end
 legend("Failure Load", "Minimum Failure Load")
 ylim([0, max([minP.minP_glue])*5])
 
@@ -742,7 +858,12 @@ title("Webs Buckling Failure")
 xlabel("Location on Bridge (mm)")
 ylabel("Failure Load (N)")
 plot(x(bridge_properties.P_webs_shear == minP.minP_webs_shear), minP.minP_webs_shear, 'rx')
-text(x(bridge_properties.P_webs_shear == minP.minP_webs_shear), minP.minP_webs_shear, sigfig(minP.minP_webs_shear))
+for i = 1:length(x)
+    if bridge_properties.P_webs_shear(i) == minP.minP_webs_shear
+        text(x(i), minP.minP_webs_shear, sigfig(minP.minP_webs_shear))
+        break
+    end
+end
 legend("Failure Load", "Minimum Failure Load")
 ylim([0, max([minP.minP_webs_shear])*5])
 
@@ -754,9 +875,19 @@ title("Flexural Failure of Walls")
 xlabel("Location on Bridge (mm)")
 ylabel("Failure Load (N)")
 plot(x(bridge_properties.P_flex_tens == minP.minP_flex_tens), minP.minP_flex_tens, 'rx')
-text(x(bridge_properties.P_flex_tens == minP.minP_flex_tens), minP.minP_flex_tens, sigfig(minP.minP_flex_tens))
+for i = 1:length(x)
+    if bridge_properties.P_flex_tens(i) == minP.minP_flex_tens
+        text(x(i), minP.minP_flex_tens, sigfig(minP.minP_flex_tens))
+        break
+    end
+end
 plot(x(bridge_properties.P_flex_comp == minP.minP_flex_comp), minP.minP_flex_comp, 'rx')
-text(x(bridge_properties.P_flex_comp == minP.minP_flex_comp), minP.minP_flex_comp, sigfig(minP.minP_flex_comp))
+for i = 1:length(x)
+    if bridge_properties.P_flex_comp(i) == minP.minP_flex_comp
+        text(x(i), minP.minP_flex_comp, sigfig(minP.minP_flex_comp))
+        break
+    end
+end
 legend("Flexture Tensile Failure Load of Walls", "Flexural Compressive Failure Load of Walls", "Minimum Failure Load", "")
 ylim([0, max([minP.minP_flex_tens, minP.minP_flex_comp])*5])
 
@@ -768,9 +899,19 @@ title("Flange Buckling Failure")
 xlabel("Location on Bridge (mm)")
 ylabel("Failure Load (N)")
 plot(x(bridge_properties.P_flange_webs == minP.minP_flange_webs), minP.minP_flange_webs, 'rx')
-text(x(bridge_properties.P_flange_webs == minP.minP_flange_webs), minP.minP_flange_webs, sigfig(minP.minP_flange_webs))
+for i = 1:length(x)
+    if bridge_properties.P_flange_webs(i) == minP.minP_flange_webs
+        text(x(i), minP.minP_flange_webs, sigfig(minP.minP_flange_webs))
+        break
+    end
+end
 plot(x(bridge_properties.P_flange_tips == minP.minP_flange_tips), minP.minP_flange_tips, 'rx')
-text(x(bridge_properties.P_flange_tips == minP.minP_flange_tips), minP.minP_flange_tips, sigfig(minP.minP_flange_tips))
+for i = 1:length(x)
+    if bridge_properties.P_flange_tips(i) == minP.minP_flange_tips
+        text(x(i), minP.minP_flange_tips, sigfig(minP.minP_flange_tips))
+        break
+    end
+end
 legend("Flange Between Webs Buckling Failure", "Flange Tips Buckling Failure", "Minimum Failure Load", "")
 ylim([0, max([minP.minP_flange_webs, minP.minP_flange_tips])*5])
 
@@ -781,7 +922,12 @@ title("Webs Buckling Failure")
 xlabel("Location on Bridge (mm)")
 ylabel("Failure Load (N)")
 plot(x(bridge_properties.P_webs == minP.minP_webs), minP.minP_webs, 'rx')
-text(x(bridge_properties.P_webs == minP.minP_webs), minP.minP_webs, sigfig(minP.minP_webs))
+for i = 1:length(x)
+    if bridge_properties.P_webs(i) == minP.minP_webs
+        text(x(i), minP.minP_webs, sigfig(minP.minP_webs))
+        break
+    end
+end
 legend("Failure Load", "Minimum Failure Load")
 ylim([0, max([minP.minP_webs])*5])
 
@@ -793,35 +939,75 @@ Pf1 = plot(x, bridge_properties.P_flex_tens.', "r-");
 % mark the minimum failure load
 plot(x(bridge_properties.P_flex_tens == minP.minP_flex_tens), minP.minP_flex_tens, 'rx')
 % label the minimum failure load
-text(x(bridge_properties.P_flex_tens == minP.minP_flex_tens), minP.minP_flex_tens, sigfig(minP.minP_flex_tens))
+for i = 1:length(x)
+    if bridge_properties.P_flex_tens(i) == minP.minP_flex_tens
+        text(x(i), minP.minP_flex_tens, sigfig(minP.minP_flex_tens))
+        break
+    end
+end
 
 Pf2 = plot(x, bridge_properties.P_flex_comp.', "g-");
 plot(x(bridge_properties.P_flex_comp == minP.minP_flex_comp), minP.minP_flex_comp, 'rx')
-text(x(bridge_properties.P_flex_comp == minP.minP_flex_comp), minP.minP_flex_comp, sigfig(minP.minP_flex_comp))    
+for i = 1:length(x)
+    if bridge_properties.P_flex_comp(i) == minP.minP_flex_comp
+        text(x(i), minP.minP_flex_comp, sigfig(minP.minP_flex_comp))
+        break
+    end
+end
 
 Pf3 = plot(x, abs(bridge_properties.P_shear.'), "r:");
 plot(x(bridge_properties.P_shear == minP.minP_shear), minP.minP_shear, 'rx')
-text(x(bridge_properties.P_shear == minP.minP_shear), minP.minP_shear, sigfig(minP.minP_shear))
+for i = 1:length(x)
+    if bridge_properties.P_shear(i) == minP.minP_shear
+        text(x(i), minP.minP_shear, sigfig(minP.minP_shear))
+        break
+    end
+end
 
 Pf4 = plot(x, abs(bridge_properties.P_glue.'), "g:");
 plot(x(bridge_properties.P_glue == minP.minP_glue), minP.minP_glue, 'rx')
-text(x(bridge_properties.P_glue == minP.minP_glue), minP.minP_glue, sigfig(minP.minP_glue))
+for i = 1:length(x)
+    if bridge_properties.P_glue(i) == minP.minP_glue
+        text(x(i), minP.minP_glue, sigfig(minP.minP_glue))
+        break
+    end
+end
 
 Pf5 = plot(x, bridge_properties.P_flange_webs.', "r-.");
 plot(x(bridge_properties.P_flange_webs == minP.minP_flange_webs), minP.minP_flange_webs, 'rx')
-text(x(bridge_properties.P_flange_webs == minP.minP_flange_webs), minP.minP_flange_webs, sigfig(minP.minP_flange_webs))
+for i = 1:length(x)
+    if bridge_properties.P_flange_webs(i) == minP.minP_flange_webs
+        text(x(i), minP.minP_flange_webs, sigfig(minP.minP_flange_webs))
+        break
+    end
+end
 
 Pf6 = plot(x, bridge_properties.P_flange_tips.', "g-.");
 plot(x(bridge_properties.P_flange_tips == minP.minP_flange_tips), minP.minP_flange_tips, 'rx')
-text(x(bridge_properties.P_flange_tips == minP.minP_flange_tips), minP.minP_flange_tips, sigfig(minP.minP_flange_tips))
+for i = 1:length(x)
+    if bridge_properties.P_flange_tips(i) == minP.minP_flange_tips
+        text(x(i), minP.minP_flange_tips, sigfig(minP.minP_flange_tips))
+        break
+    end
+end
 
 Pf7 = plot(x, bridge_properties.P_webs.', "b-.");
 plot(x(bridge_properties.P_webs == minP.minP_webs), minP.minP_webs, 'rx')
-text(x(bridge_properties.P_webs == minP.minP_webs), minP.minP_webs, sigfig(minP.minP_webs))
+for i = 1:length(x)
+    if bridge_properties.P_webs(i) == minP.minP_webs
+        text(x(i), minP.minP_webs, sigfig(minP.minP_webs))
+        break
+    end
+end
 
 Pf8 = plot(x, bridge_properties.P_webs_shear.', "b:");
 plot(x(bridge_properties.P_webs_shear == minP.minP_webs_shear), minP.minP_webs_shear, 'rx')
-text(x(bridge_properties.P_webs_shear == minP.minP_webs_shear), minP.minP_webs_shear, sigfig(minP.minP_webs_shear))
+for i = 1:length(x)
+    if bridge_properties.P_webs_shear(i) == minP.minP_webs_shear
+        text(x(i), minP.minP_webs_shear, sigfig(minP.minP_webs_shear))
+        break
+    end
+end
 
 % plot the overall minimum failure load
 Pf9 = plot(x, ones(1, n+1)*minP.overall_minP, 'k--');
@@ -934,9 +1120,6 @@ xlabel("Location on Bridge (mm)")
 ylabel("Shear Force Capacity (N)")
 legend([Vc1, Vc2, Vc3, Vc4], ["Shear Failure of Walls", "Glue Shear Failure", "Webs Shear Buckling Failure", "Shear Force Envelope"], 'Location', 'best')
 
-% only display shear force capacities up to 2000 N
-ylim([0, 2000])
-
 %% 8.4 Plotting the Bending Moment Capacilities together
 figure
 hold on; grid on; grid minor;
@@ -957,9 +1140,6 @@ title("Bending Moment Capacities")
 xlabel("Location on Bridge (mm)")
 ylabel("Bending Moment Capacity (N*mm)")
 legend([Mc1, Mc2, Mc3, Mc4, Mc5, Mc6], ["Flexural Tensile Failure of Walls", "Flexural Compressive Failure of Walls", "Flange Between Webs Buckling Failure", "Flange Tips Buckling Failure", "Webs Buckling Failure", "Bending Moment Diagram"], 'Location', 'best')
-
-% only display bending moment capacities up to 10e5 N*mm
-ylim([0, 10e5])
 
 %% 9. Functions
 %% 9.1 Reaction Solver
