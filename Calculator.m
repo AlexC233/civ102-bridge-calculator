@@ -10,7 +10,7 @@ x = linspace(0, L, n+1); % x-axis
 %% 1.1 Define Train Loading
 x_train = [52 228 392 568 732 908]; % Train Load Locations (the 6 wheels)
 l_train = 960; % Train Length
-P_factors = [1 1 1 1 1 1]; % Load Factors (the 6 wheels)
+P_factors = [1.35 1.35 1 1 1 1]; % Load Factors (the 6 wheels)
 P_train = P_factors .* P/sum(P_factors) * -1; % load of each wheel
 
 %% 1.2 Solve for SFD and BMD with the train at different locations
@@ -113,11 +113,6 @@ disp("Maximum bending moment: " + sigfig(max_moment) + " N*mm")
 
 disp(" ")
 
-% find when the moment is at a maximum
-max_moment_location = x(BMD == max_moment);
-
-% find which row of the BMDi matrix the maximum moment is in column max_moment_location(1)
-
 %% 2. Define Cross Section
 %% 2.1 Define Individual Cross Sections
 % x_sections is stored as a dictionary with the keys being the x location along the bridge and the values being the cross section at that location
@@ -217,7 +212,7 @@ glue_locations = {[0, 10, 75, 1.27 + 5, 1;
 %     23.135, 114.92, 10, 1.27, 0, 0;
 %     86.865, 114.92, 10, 1.27, 0, 0;
 %     ]};
-
+% 
 % glue_locations = {[
 %     0, 21.865, 116.19, 11.27, 1;
 %     0, 86.855, 116.19, 11.27, 1;
@@ -323,7 +318,7 @@ for i = 1:length(x_change)
     % check if the glue is horizontal or vertical
     % assuming that all glue for a given cross section is either all horizontal or all vertical
     if ~isempty(glue)
-        bg = 0; % width of the glue
+        b_g = 0; % width of the glue
         if glue(1, 1) == 0
             % only calculate the glue if calculate is 1
                 % if the glue is horizontal, find the width of the glue
@@ -340,12 +335,12 @@ for i = 1:length(x_change)
                 x_section_glue.ybar = x_section_glue.y + x_section_glue.dy/2;
 
                 % find the width of the glue
-                bg = sum(glue(:,4));
+                b_g = sum(glue(:,4));
 
                 % find Q at the glue location
                 Qglue(i) = sum(x_section_glue.area.*(ybar(i) - x_section_glue.ybar));
 
-                bg(i) = bg;
+                bg(i) = b_g;
         else
             % not implemented
         end
